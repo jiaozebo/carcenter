@@ -132,85 +132,92 @@ public class LoginActivity extends BaseActivity {
                     super.onPostExecute(integer);
                     mProgress.dismiss();
                     if (integer == 0){
-                        // 调用sdk登陆方法登陆聊天服务器
-                        EMChatManager.getInstance().login(username, password, new EMCallBack() {
-
-                            @Override
-                            public void onSuccess() {
-                                // 登陆成功，保存用户名密码
-                                DemoApplication.getInstance().setUserName(username);
-                                DemoApplication.getInstance().setPassword(password);
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        mProgress.setMessage("正在获取好友和群聊列表...");
-                                    }
-                                });
-                                try {
-                                    // demo中简单的处理成每次登陆都去获取好友username，开发者自己根据情况而定
-                                    List<String> usernames = EMChatManager.getInstance().getContactUserNames();
-                                    Map<String, User> userlist = new HashMap<String, User>();
-                                    for (String username : usernames) {
-                                        User user = new User();
-                                        user.setUsername(username);
-                                        setUserHearder(username, user);
-                                        userlist.put(username, user);
-                                    }
-                                    // 添加user"申请与通知"
-                                    User newFriends = new User();
-                                    newFriends.setUsername(Constant.NEW_FRIENDS_USERNAME);
-                                    newFriends.setNick("申请与通知");
-                                    newFriends.setHeader("");
-                                    userlist.put(Constant.NEW_FRIENDS_USERNAME, newFriends);
-                                    // 添加"群聊"
-                                    User groupUser = new User();
-                                    groupUser.setUsername(Constant.GROUP_USERNAME);
-                                    groupUser.setNick("群聊");
-                                    groupUser.setHeader("");
-                                    userlist.put(Constant.GROUP_USERNAME, groupUser);
-
-                                    // 存入内存
-                                    DemoApplication.getInstance().setContactList(userlist);
-                                    // 存入db
-                                    UserDao dao = new UserDao(LoginActivity.this);
-                                    List<User> users = new ArrayList<User>(userlist.values());
-                                    dao.saveContactList(users);
-
-                                    // 获取群聊列表,sdk会把群组存入到EMGroupManager和db中
-                                    EMGroupManager.getInstance().getGroupsFromServer();
-                                    // after login, we join groups in separate threads;
-                                    EMGroupManager.getInstance().joinGroupsAfterLogin();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-                                if (!LoginActivity.this.isFinishing())
-                                    mProgress.dismiss();
-                                // 进入主页面
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                finish();
-                            }
-
-                            @Override
-                            public void onProgress(int progress, String status) {
-
-                            }
-
-                            @Override
-                            public void onError(int code, final String message) {
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        mProgress.dismiss();
-                                        if (message.indexOf("not support the capital letters") != -1) {
-                                            Toast.makeText(getApplicationContext(), "用户名不支持大写字母", Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(getApplicationContext(), "登录失败: " + message, Toast.LENGTH_SHORT).show();
-                                        }
-
-                                    }
-                                });
-                            }
-                        });
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        finish();
+                    }else
+                    {
+                        Toast.makeText(LoginActivity.this, "登录不成功",Toast.LENGTH_SHORT).show();
                     }
+//                    if (integer == 0){
+//                        // 调用sdk登陆方法登陆聊天服务器
+//                        EMChatManager.getInstance().login(username, password, new EMCallBack() {
+//
+//                            @Override
+//                            public void onSuccess() {
+//                                // 登陆成功，保存用户名密码
+//                                DemoApplication.getInstance().setUserName(username);
+//                                DemoApplication.getInstance().setPassword(password);
+//                                runOnUiThread(new Runnable() {
+//                                    public void run() {
+//                                        mProgress.setMessage("正在获取好友和群聊列表...");
+//                                    }
+//                                });
+//                                try {
+//                                    // demo中简单的处理成每次登陆都去获取好友username，开发者自己根据情况而定
+//                                    List<String> usernames = EMChatManager.getInstance().getContactUserNames();
+//                                    Map<String, User> userlist = new HashMap<String, User>();
+//                                    for (String username : usernames) {
+//                                        User user = new User();
+//                                        user.setUsername(username);
+//                                        setUserHearder(username, user);
+//                                        userlist.put(username, user);
+//                                    }
+//                                    // 添加user"申请与通知"
+//                                    User newFriends = new User();
+//                                    newFriends.setUsername(Constant.NEW_FRIENDS_USERNAME);
+//                                    newFriends.setNick("申请与通知");
+//                                    newFriends.setHeader("");
+//                                    userlist.put(Constant.NEW_FRIENDS_USERNAME, newFriends);
+//                                    // 添加"群聊"
+//                                    User groupUser = new User();
+//                                    groupUser.setUsername(Constant.GROUP_USERNAME);
+//                                    groupUser.setNick("群聊");
+//                                    groupUser.setHeader("");
+//                                    userlist.put(Constant.GROUP_USERNAME, groupUser);
+//
+//                                    // 存入内存
+//                                    DemoApplication.getInstance().setContactList(userlist);
+//                                    // 存入db
+//                                    UserDao dao = new UserDao(LoginActivity.this);
+//                                    List<User> users = new ArrayList<User>(userlist.values());
+//                                    dao.saveContactList(users);
+//
+//                                    // 获取群聊列表,sdk会把群组存入到EMGroupManager和db中
+//                                    EMGroupManager.getInstance().getGroupsFromServer();
+//                                    // after login, we join groups in separate threads;
+//                                    EMGroupManager.getInstance().joinGroupsAfterLogin();
+//                                } catch (Exception e) {
+//                                    e.printStackTrace();
+//                                }
+//
+//                                if (!LoginActivity.this.isFinishing())
+//                                    mProgress.dismiss();
+//                                // 进入主页面
+//                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+//                                finish();
+//                            }
+//
+//                            @Override
+//                            public void onProgress(int progress, String status) {
+//
+//                            }
+//
+//                            @Override
+//                            public void onError(int code, final String message) {
+//                                runOnUiThread(new Runnable() {
+//                                    public void run() {
+//                                        mProgress.dismiss();
+//                                        if (message.indexOf("not support the capital letters") != -1) {
+//                                            Toast.makeText(getApplicationContext(), "用户名不支持大写字母", Toast.LENGTH_SHORT).show();
+//                                        } else {
+//                                            Toast.makeText(getApplicationContext(), "登录失败: " + message, Toast.LENGTH_SHORT).show();
+//                                        }
+//
+//                                    }
+//                                });
+//                            }
+//                        });
+//                    }
                 }
             }.execute();
 

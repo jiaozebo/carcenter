@@ -25,27 +25,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/main_bottom_item_bg"
-                android:drawableTop="@drawable/tab_chat_bg"
+                android:drawableTop="@android:drawable/ic_menu_view"
                 android:onClick="onTabClicked"
                 android:paddingBottom="2dip"
                 android:paddingTop="7dip"
                 android:scaleType="matrix"
-                android:text="会话"
+                android:text="查看"
                 android:textColor="@color/main_botton_text_color"
                 android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/unread_msg_number"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/tab_unread_bg"
-                android:gravity="center"
-                android:text="7"
-                android:textColor="@android:color/white"
-                android:textSize="12sp"
-                android:visibility="invisible" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -59,12 +46,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/main_bottom_item_bg"
-                android:drawableTop="@drawable/tab_contact_list_bg"
+                android:drawableTop="@android:drawable/ic_menu_manage"
                 android:onClick="onTabClicked"
                 android:paddingBottom="2dip"
                 android:paddingTop="7dip"
                 android:scaleType="matrix"
-                android:text="通讯录"
+                android:text="维修"
                 android:textColor="@color/main_botton_text_color"
                 android:textSize="12sp" />
 
@@ -93,12 +80,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/main_bottom_item_bg"
-                android:drawableTop="@drawable/tab_setting_bg"
+                android:drawableTop="@android:drawable/ic_menu_send"
                 android:onClick="onTabClicked"
                 android:paddingBottom="2dip"
                 android:paddingTop="7dip"
                 android:scaleType="matrix"
-                android:text="设置"
+                android:text="交流"
                 android:textColor="@color/main_botton_text_color"
                 android:textSize="12sp" />
         </RelativeLayout>

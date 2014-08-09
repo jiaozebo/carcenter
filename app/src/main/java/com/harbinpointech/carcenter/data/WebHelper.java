@@ -46,7 +46,15 @@ public class WebHelper {
         } else {
             return result;
         }
+    }
 
+    public static int getAllCarPositions(JSONObject[] carPositions) throws IOException, JSONException {
+        JSONObject[] param = new JSONObject[]{null};
+        int result = doPost(URL + "GetAllCarPositions",param);
+        if (result == 200){
+            carPositions[0] = param[0];
+        }
+        return result;
     }
 
     public static byte[] MD5(byte[] input) throws NoSuchAlgorithmException {
@@ -59,9 +67,10 @@ public class WebHelper {
         HttpPost request = new HttpPost(url);
         request.setHeader("Accept", "application/json");
         request.setHeader("Content-type", "application/json");
-
-        StringEntity entity = new StringEntity(json[0].toString());
-        request.setEntity(entity);
+        if (json[0] != null){
+            StringEntity entity = new StringEntity(json[0].toString());
+            request.setEntity(entity);
+        }
         DefaultHttpClient httpClient = new DefaultHttpClient();
         HttpResponse response = httpClient.execute(request);
         StatusLine sl = response.getStatusLine();
