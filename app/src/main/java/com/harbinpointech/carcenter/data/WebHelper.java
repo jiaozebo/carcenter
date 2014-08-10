@@ -70,6 +70,9 @@ public class WebHelper {
         if (json[0] != null){
             StringEntity entity = new StringEntity(json[0].toString());
             request.setEntity(entity);
+        }else
+        {
+            request.setEntity(new StringEntity("{}"));
         }
         DefaultHttpClient httpClient = new DefaultHttpClient();
         HttpResponse response = httpClient.execute(request);
