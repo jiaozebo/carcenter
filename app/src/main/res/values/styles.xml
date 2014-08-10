@@ -73,7 +73,7 @@
         <item name="android:windowAnimationStyle">@style/AnimFade</item>
     </style>
 
-    <style name="horizontal_slide" parent="android:Theme.NoTitleBar">
+    <style name="horizontal_slide" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="android:windowAnimationStyle">@style/AnimFade2</item>
     </style>
 

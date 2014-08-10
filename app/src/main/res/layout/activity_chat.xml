@@ -114,7 +114,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/edit_text_bg" >
 
-                <com.easemob.chatuidemo.widget.PasteEditText
+                <com.harbinpointech.carcenter.widget.PasteEditText
                     android:id="@+id/et_sendmessage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -125,7 +125,7 @@
                     android:onClick="editClick"
                     android:padding="5dp"
                     android:textSize="18sp" >
-                </com.easemob.chatuidemo.widget.PasteEditText>
+                </com.harbinpointech.carcenter.widget.PasteEditText>
 
                 <ImageView
                     android:id="@+id/iv_emoticons_normal"

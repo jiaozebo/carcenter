@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.easemob.chatuidemo"
+    package="com.harbinpointech.carcenter"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -24,21 +24,34 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <permission android:name="android.permission.BAIDU_LOCATION_SERVICE" />
 
     <uses-permission android:name="android.permission.BAIDU_LOCATION_SERVICE" />
 
     <application
-        android:name="DemoApplication"
+        android:name=".DemoApplication"
         android:allowBackup="true"
         android:icon="@drawable/logo_uidemo"
+        android:theme="@style/horizontal_slide"
         android:label="@string/app_name" >
         <activity
-            android:name=".activity.MainActivity"
+            android:name=".activity.MainChatActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="adjustPan" >
         </activity>
         <!-- 登陆 -->
@@ -98,11 +111,6 @@
             android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="adjustPan" >
         </activity>
-        <!-- 地图 -->
-        <activity
-            android:name="com.easemob.chatuidemo.activity.BaiduMapActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
 
         <!-- 新的朋友邀请消息页面 -->
         <activity
@@ -141,7 +149,7 @@
             android:name=".activity.BlacklistActivity"
             android:theme="@style/horizontal_slide" >
         </activity>
-        
+
         <!-- 公开的群聊列表 -->
         <activity
             android:name=".activity.PublicGroupsActivity"
@@ -157,18 +165,17 @@
             android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="stateAlwaysHidden" >
         </activity>
-        <!-- choose video  -->
-        <activity android:name=".activity.ImageGridActivity"
+        <!-- choose video -->
+        <activity
+            android:name=".activity.ImageGridActivity"
             android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden"
-            >
+            android:windowSoftInputMode="stateAlwaysHidden" >
         </activity>
-        <activity android:name=".activity.RecorderVideoActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden"
+        <activity
+            android:name=".activity.RecorderVideoActivity"
             android:screenOrientation="portrait"
-            ></activity>
-        
+            android:theme="@style/horizontal_slide"
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <!-- 开机自启动服务 -->
         <receiver android:name="com.easemob.chat.StartServiceReceiver" >
@@ -186,19 +193,24 @@
             android:value="tsinglink#vehicle" />
         <!-- 声明sdk所需的service -->
         <service android:name="com.easemob.chat.EMChatService" />
-        
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
-        
-        <!--  ChatDemoUI  使用友盟统计来收集crash report。这个不是环信sdk 的一部分 -->
+
+        <!-- ChatDemoUI  使用友盟统计来收集crash report。这个不是环信sdk 的一部分 -->
         <meta-data
             android:name="UMENG_APPKEY"
             android:value="53912a3156240b01a7075ed1" >
         </meta-data>
-        <!--  end of 友盟声明 -->
-        
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="0Aya15PDQZWEbkhl6XeOAI7K" />
+        <!-- end of 友盟声明 -->
+        <activity
+            android:name=".activity.MainActivity"
+            android:label="@string/title_activity_main" >
+        </activity>
     </application>
 
 </manifest>
