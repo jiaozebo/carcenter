@@ -30,7 +30,7 @@ dependencies {
 
     compile files('libs/baidumapapi_v3_1_0.jar')
     compile files('libs/easemobchat_2.0.6.jar')
-    compile files('libs/locSDK_3.3.jar')
+    compile files('libs/locSDK_4.2.jar')
     compile files('libs/umeng_sdk.jar')
     // You must install or update the Support Repository through the SDK manager to use this dependency.
     // You must install or update the Support Repository through the SDK manager to use this dependency.

@@ -13,10 +13,6 @@
  */
 package com.harbinpointech.carcenter;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
@@ -40,6 +36,10 @@ import com.harbinpointech.carcenter.db.UserDao;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.utils.PreferenceUtils;
 import com.umeng.analytics.MobclickAgent;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class DemoApplication extends Application {
 
@@ -188,8 +188,7 @@ public class DemoApplication extends Application {
 
 	/**
 	 * 设置用户名
-	 * 
-	 * @param user
+	 *
 	 */
 	public void setUserName(String username) {
 		if (username != null) {

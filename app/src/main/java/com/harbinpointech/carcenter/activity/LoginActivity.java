@@ -13,13 +13,6 @@
  */
 package com.harbinpointech.carcenter.activity;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,73 +25,68 @@ import android.widget.Toast;
 
 import com.easemob.EMCallBack;
 import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMGroupManager;
 import com.easemob.exceptions.EaseMobException;
-import com.harbinpointech.carcenter.Constant;
 import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
-import com.harbinpointech.carcenter.db.UserDao;
-import com.harbinpointech.carcenter.domain.User;
-import com.harbinpointech.carcenter.utils.CommonUtils;
-import com.harbinpointech.carcenter.util.AsyncTask;
-import com.easemob.util.HanziToPinyin;
 import com.harbinpointech.carcenter.data.WebHelper;
+import com.harbinpointech.carcenter.util.AsyncTask;
+import com.harbinpointech.carcenter.utils.CommonUtils;
 
 import org.json.JSONException;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * 登陆页面
- * 
  */
 public class LoginActivity extends BaseActivity {
-	private EditText usernameEditText;
-	private EditText passwordEditText;
+    private EditText usernameEditText;
+    private EditText passwordEditText;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_login);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
 
-		usernameEditText = (EditText) findViewById(R.id.username);
-		passwordEditText = (EditText) findViewById(R.id.password);
-		// 如果用户名密码都有，直接进入主页面
-		if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null) {
-			startActivity(new Intent(this, MainActivity.class));
-			finish();
-		}
-		// 如果用户名改变，清空密码
-		usernameEditText.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				passwordEditText.setText(null);
-			}
+        usernameEditText = (EditText) findViewById(R.id.username);
+        passwordEditText = (EditText) findViewById(R.id.password);
 
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        usernameEditText.setText(DemoApplication.getInstance().getUserName());
+        passwordEditText.setText(DemoApplication.getInstance().getPassword());
+        // 如果用户名改变，清空密码
+        usernameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                passwordEditText.setText(null);
+            }
 
-			}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-			@Override
-			public void afterTextChanged(Editable s) {
+            }
 
-			}
-		});
+            @Override
+            public void afterTextChanged(Editable s) {
 
-	}
+            }
+        });
 
-	/**
-	 * 登陆
-	 * 
-	 * @param view
-	 */
-	public void login(View view) {
-		if (!CommonUtils.isNetWorkConnected(this)) {
-			Toast.makeText(this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
-			return;
-		}
-		final String username = usernameEditText.getText().toString();
-		final String password = passwordEditText.getText().toString();
-		if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
+    }
+
+    /**
+     * 登陆
+     *
+     * @param view
+     */
+    public void login(View view) {
+        if (!CommonUtils.isNetWorkConnected(this)) {
+            Toast.makeText(this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final String username = usernameEditText.getText().toString();
+        final String password = passwordEditText.getText().toString();
+        if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
 
             AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
                 public ProgressDialog mProgress;
@@ -106,16 +94,17 @@ public class LoginActivity extends BaseActivity {
                 @Override
                 protected Integer doInBackground(Void... params) {
                     try {
-
-                        EMChatManager.getInstance().createAccountOnServer(username, password);
+                        try {
+                            EMChatManager.getInstance().createAccountOnServer(username, password);
+                        } catch (EaseMobException e) {
+                            e.printStackTrace();
+                        }
                         return WebHelper.login(username, password);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (EaseMobException e) {
                         e.printStackTrace();
                     }
                     return -1;
@@ -134,8 +123,18 @@ public class LoginActivity extends BaseActivity {
                 protected void onPostExecute(Integer integer) {
                     super.onPostExecute(integer);
 
-                    if (integer == 0){
-
+                    if (integer == 0) {
+                        // 如果用户名密码都有，直接进入主页面
+                        if (username.equals(DemoApplication.getInstance().getUserName()) && password.equals(DemoApplication.getInstance().getPassword())) {
+                            mProgress.dismiss();
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            finish();
+                            return;
+                        }
+                        // 用户名、密码更换了，重新登出、登录
+                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null){
+                            DemoApplication.getInstance().logout();
+                        }
                         // 调用sdk登陆方法登陆聊天服务器
                         EMChatManager.getInstance().login(username, password, new EMCallBack() {
 
@@ -175,33 +174,32 @@ public class LoginActivity extends BaseActivity {
                                 });
                             }
                         });
-                    }else{
+                    } else {
                         mProgress.dismiss();
-                        Toast.makeText(LoginActivity.this, "登录不成功",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, "登录不成功", Toast.LENGTH_SHORT).show();
                     }
                 }
             }.execute();
 
 
+        }
+    }
 
-		}
-	}
+    /**
+     * 注册
+     *
+     * @param view
+     */
+    public void register(View view) {
+        startActivityForResult(new Intent(this, RegisterActivity.class), 0);
+    }
 
-	/**
-	 * 注册
-	 * 
-	 * @param view
-	 */
-	public void register(View view) {
-		startActivityForResult(new Intent(this, RegisterActivity.class), 0);
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		if (DemoApplication.getInstance().getUserName() != null) {
-			usernameEditText.setText(DemoApplication.getInstance().getUserName());
-		}
-	}
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (DemoApplication.getInstance().getUserName() != null) {
+            usernameEditText.setText(DemoApplication.getInstance().getUserName());
+        }
+    }
 
 }

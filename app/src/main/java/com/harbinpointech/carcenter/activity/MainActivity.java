@@ -5,10 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,10 +25,10 @@ import com.easemob.exceptions.EaseMobException;
 import com.easemob.util.HanziToPinyin;
 import com.harbinpointech.carcenter.Constant;
 import com.harbinpointech.carcenter.DemoApplication;
+import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.db.UserDao;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
-import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.fragment.MapFragment;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
@@ -68,6 +68,17 @@ public class MainActivity extends ActionBarActivity {
         intentFilter.setPriority(3);
         registerReceiver(mMsgReceiver, intentFilter);
         EMChat.getInstance().setAppInited();
+
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mMsgReceiver != null) {
+            unregisterReceiver(mMsgReceiver);
+            mMsgReceiver = null;
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -300,4 +311,6 @@ public class MainActivity extends ActionBarActivity {
             abortBroadcast();
         }
     };
+
+
 }
