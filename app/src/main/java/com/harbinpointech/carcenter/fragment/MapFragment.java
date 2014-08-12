@@ -10,15 +10,22 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
+import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -74,12 +81,25 @@ public class MapFragment extends SupportMapFragment {
                 if (integer == 0) {
                     //
 
-//                    addCars2Map();
+                    addCars2Map();
                 }
             }
         }.execute();
 
         initlocation();
+        getBaiduMap().setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Bundle bundle = marker.getExtraInfo();
+                int index = bundle.getInt("index");
+                try{
+                    JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
+                }catch (Exception e){
+                    e.printStackTrace();;
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -88,8 +108,35 @@ public class MapFragment extends SupportMapFragment {
         super.onDestroy();
     }
 
-    private void uninitLocation(){
-        if (mLocationClient != null){
+    private void addCars2Map() {
+        try {
+            JSONArray js = mCarPos.getJSONArray("d");
+            for (int i = 0; i < js.length(); i++) {
+                JSONObject item = js.getJSONObject(i);
+                //定义Maker坐标点
+                LatLng point = new LatLng(item.getDouble("Lattitude"), item.getDouble("Longtitude"));
+//构建Marker图标
+                BitmapDescriptor bitmap = BitmapDescriptorFactory
+                        .fromResource(R.drawable.icon_marka);
+//构建MarkerOption，用于在地图上添加Marker
+                Bundle extrInfo = new Bundle();
+                extrInfo.putInt("index",i);
+                OverlayOptions option = new MarkerOptions()
+                        .position(point)
+                        .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
+//在地图上添加Marker，并显示
+                Marker m =(Marker) getBaiduMap().addOverlay(option);
+
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ;
+        }
+    }
+
+    private void uninitLocation() {
+        if (mLocationClient != null) {
             mLocationClient.stop();
             mLocationClient.unRegisterLocationListener(mListener);
             mLocationClient = null;
@@ -119,7 +166,7 @@ public class MapFragment extends SupportMapFragment {
                 ActionBarActivity activity = (ActionBarActivity) getActivity();
                 activity.getSupportActionBar().setSubtitle(String.format("%s:%s", "当前城市", city));
                 BaiduMap map = getBaiduMap();
-                if (mLastLocation == null){
+                if (mLastLocation == null) {
                     mLastLocation = location;
                     LatLng ll = new LatLng(location.getLatitude(),
                             location.getLongitude());
