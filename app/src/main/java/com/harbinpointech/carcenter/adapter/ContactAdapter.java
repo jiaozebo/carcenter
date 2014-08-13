@@ -13,9 +13,6 @@
  */
 package com.harbinpointech.carcenter.adapter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
 import android.content.Context;
 import android.text.Editable;
@@ -34,16 +31,19 @@ import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import com.easemob.chat.EMContact;
 import com.harbinpointech.carcenter.Constant;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.widget.Sidebar;
 
+import java.util.List;
+
 /**
  * 简单的好友Adapter实现
  *
  */
-public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexer{
+public class ContactAdapter extends ArrayAdapter<EMContact>  implements SectionIndexer{
 
 	private LayoutInflater layoutInflater;
 	private EditText query;
@@ -53,7 +53,7 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
 	private Sidebar sidebar;
 	private int res;
 
-	public ContactAdapter(Context context, int resource, List<User> objects,Sidebar sidebar) {
+	public ContactAdapter(Context context, int resource, List<EMContact> objects,Sidebar sidebar) {
 		super(context, resource, objects);
 		this.res = resource;
 		this.sidebar=sidebar;
@@ -117,34 +117,27 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
 			ImageView avatar = (ImageView) convertView.findViewById(R.id.avatar);
 			TextView unreadMsgView = (TextView) convertView.findViewById(R.id.unread_msg_number);
 			TextView nameTextview = (TextView) convertView.findViewById(R.id.name);
-			TextView tvHeader = (TextView) convertView.findViewById(R.id.header);
-			User user = getItem(position);
+            EMContact contact = getItem(position);
 			//设置nick，demo里不涉及到完整user，用username代替nick显示
-			String username = user.getUsername();
-			String header = user.getHeader();
-			if (position == 0 || header != null && !header.equals(getItem(position - 1).getHeader())) {
-				if ("".equals(header)) {
-					tvHeader.setVisibility(View.GONE);
-				} else {
-					tvHeader.setVisibility(View.VISIBLE);
-					tvHeader.setText(header);
-				}
-			} else {
-				tvHeader.setVisibility(View.GONE);
-			}
+			String username = contact.getUsername();
+
 			//显示申请与通知item
 			if(username.equals(Constant.NEW_FRIENDS_USERNAME)){
-				nameTextview.setText(user.getNick());
+				nameTextview.setText(contact.getNick());
 				avatar.setImageResource(R.drawable.new_friends_icon);
-				if(user.getUnreadMsgCount() > 0){
-					unreadMsgView.setVisibility(View.VISIBLE);
-					unreadMsgView.setText(user.getUnreadMsgCount()+"");
-				}else{
-					unreadMsgView.setVisibility(View.INVISIBLE);
-				}
+                if (contact instanceof  User){
+                    User user = (User) contact;
+                    if(user.getUnreadMsgCount() > 0){
+                        unreadMsgView.setVisibility(View.VISIBLE);
+                        unreadMsgView.setText(user.getUnreadMsgCount()+"");
+                    }else{
+                        unreadMsgView.setVisibility(View.INVISIBLE);
+                    }
+                }
+
 			}else if(username.equals(Constant.GROUP_USERNAME)){
 				//群聊item
-				nameTextview.setText(user.getNick());
+				nameTextview.setText(contact.getNick());
 				avatar.setImageResource(R.drawable.groups_icon);
 			}else{
 				nameTextview.setText(username);
@@ -158,7 +151,7 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
 	}
 	
 	@Override
-	public User getItem(int position) {
+	public EMContact getItem(int position) {
 		return position == 0 ? new User() : super.getItem(position - 1);
 	}
 	
@@ -178,26 +171,25 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
 
 	@Override
 	public Object[] getSections() {
-		positionOfSection = new SparseIntArray();
-		sectionOfPosition = new SparseIntArray();
-		int count = getCount();
-		List<String> list = new ArrayList<String>();
-		list.add(getContext().getString(R.string.search_header));
-		positionOfSection.put(0, 0);
-		sectionOfPosition.put(0, 0);
-		for (int i = 1; i < count; i++) {
-
-			String letter = getItem(i).getHeader();
-			System.err.println("contactadapter getsection getHeader:" + letter + " name:" + getItem(i).getUsername());
-			int section = list.size() - 1;
-			if (list.get(section) != null && !list.get(section).equals(letter)) {
-				list.add(letter);
-				section++;
-				positionOfSection.put(section, i);
-			}
-			sectionOfPosition.put(i, section);
-		}
-		return list.toArray(new String[list.size()]);
+//		positionOfSection = new SparseIntArray();
+//		sectionOfPosition = new SparseIntArray();
+//		int count = getCount();
+//		List<String> list = new ArrayList<String>();
+//		list.add(getContext().getString(R.string.search_header));
+//		positionOfSection.put(0, 0);
+//		sectionOfPosition.put(0, 0);
+//		for (int i = 1; i < count; i++) {
+//
+//			System.err.println("contactadapter getsection getHeader:" + letter + " name:" + getItem(i).getUsername());
+//			int section = list.size() - 1;
+//			if (list.get(section) != null && !list.get(section).equals(letter)) {
+//				list.add(letter);
+//				section++;
+//				positionOfSection.put(section, i);
+//			}
+//			sectionOfPosition.put(i, section);
+//		}
+		return new Object[0];
 	}
 
 }

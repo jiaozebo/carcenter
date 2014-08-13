@@ -75,7 +75,8 @@
         <activity
             android:name=".activity.LoginActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide" >
+            android:theme="@style/horizontal_slide"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -225,6 +226,7 @@
         <!-- end of 友盟声明 -->
         <activity
             android:name=".activity.MainActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_main" >
         </activity>
     </application>

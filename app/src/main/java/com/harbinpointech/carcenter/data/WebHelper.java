@@ -27,6 +27,11 @@ public class WebHelper {
 
     public static final String URL = "http://182.254.136.208:81/WCF/Service.svc/";
     //    public static final String URL = "http://192.168.1.101:81/service.svc/";
+
+    public static boolean hasLogined(){
+        return !TextUtils.isEmpty(JSESSIONID);
+    }
+
     private static String JSESSIONID = null;
 
     public static int login_m(String usr, String password) throws JSONException, IOException, NoSuchAlgorithmException {

@@ -13,11 +13,6 @@
  */
 package com.harbinpointech.carcenter.activity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,6 +25,7 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 
+import com.easemob.chat.EMContact;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import com.harbinpointech.carcenter.Constant;
@@ -38,6 +34,9 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.adapter.ContactAdapter;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.widget.Sidebar;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GroupPickContactsActivity extends BaseActivity {
 	private ListView listView;
@@ -66,19 +65,19 @@ public class GroupPickContactsActivity extends BaseActivity {
 		if(exitingMembers == null)
 			exitingMembers = new ArrayList<String>();
 		// 获取好友列表
-		final List<User> alluserList = new ArrayList<User>();
+		final List<EMContact> alluserList = new ArrayList<EMContact>();
 		for (User user : DemoApplication.getInstance().getContactList().values()) {
 			if (!user.getUsername().equals(Constant.NEW_FRIENDS_USERNAME) & !user.getUsername().equals(Constant.GROUP_USERNAME))
 				alluserList.add(user);
 		}
 		// 对list进行排序
-		Collections.sort(alluserList, new Comparator<User>() {
-			@Override
-			public int compare(User lhs, User rhs) {
-				return (lhs.getUsername().compareTo(rhs.getUsername()));
-
-			}
-		});
+//		Collections.sort(alluserList, new Comparator<User>() {
+//			@Override
+//			public int compare(User lhs, User rhs) {
+//				return (lhs.getUsername().compareTo(rhs.getUsername()));
+//
+//			}
+//		});
 
 		listView = (ListView) findViewById(R.id.list);
 		contactAdapter = new PickContactAdapter(this, R.layout.row_contact_with_checkbox, alluserList);
@@ -130,7 +129,7 @@ public class GroupPickContactsActivity extends BaseActivity {
 
 		private boolean[] isCheckedArray;
 
-		public PickContactAdapter(Context context, int resource, List<User> users) {
+		public PickContactAdapter(Context context, int resource, List<EMContact> users) {
 			super(context, resource, users, null);
 			isCheckedArray = new boolean[users.size()];
 		}

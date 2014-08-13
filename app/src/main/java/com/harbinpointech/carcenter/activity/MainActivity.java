@@ -1,6 +1,5 @@
 package com.harbinpointech.carcenter.activity;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +8,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,28 +17,16 @@ import com.baidu.mapapi.SDKInitializer;
 import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMConversation;
-import com.easemob.chat.EMGroupManager;
 import com.easemob.chat.EMMessage;
-import com.easemob.exceptions.EaseMobException;
-import com.easemob.util.HanziToPinyin;
-import com.harbinpointech.carcenter.Constant;
-import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
-import com.harbinpointech.carcenter.db.UserDao;
-import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
-import com.harbinpointech.carcenter.util.AsyncTask;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends ActionBarActivity {
 
     private int mCurrentSelectId;
-    private List<String> mIMUSers;
     private boolean useDemo = false;
     private NewMessageBroadcastReceiver mMsgReceiver;
     private HashMap<Integer, Fragment> mFragmentsMap = new HashMap<Integer, Fragment>();
@@ -111,78 +97,6 @@ public class MainActivity extends ActionBarActivity {
                 break;
             case R.id.btn_setting:
 
-                if (useDemo) {
-                    if (mIMUSers == null) {
-                        new AsyncTask<Void, Integer, Integer>() {
-                            ProgressDialog mProgress;
-
-                            @Override
-                            protected Integer doInBackground(Void... params) {
-                                try {
-                                    List<String> usernames = EMChatManager.getInstance().getContactUserNames();
-                                    mIMUSers.addAll(usernames);
-                                    Map<String, User> userlist = new HashMap<String, User>();
-                                    for (String username : usernames) {
-                                        User user = new User();
-                                        user.setUsername(username);
-                                        setUserHearder(username, user);
-                                        userlist.put(username, user);
-                                    }
-                                    // 添加user"申请与通知"
-                                    User newFriends = new User();
-                                    newFriends.setUsername(Constant.NEW_FRIENDS_USERNAME);
-                                    newFriends.setNick("申请与通知");
-                                    newFriends.setHeader("");
-                                    userlist.put(Constant.NEW_FRIENDS_USERNAME, newFriends);
-                                    // 添加"群聊"
-                                    User groupUser = new User();
-                                    groupUser.setUsername(Constant.GROUP_USERNAME);
-                                    groupUser.setNick("群聊");
-                                    groupUser.setHeader("");
-                                    userlist.put(Constant.GROUP_USERNAME, groupUser);
-
-                                    // 存入内存
-                                    DemoApplication.getInstance().setContactList(userlist);
-                                    // 存入db
-                                    UserDao dao = new UserDao(MainActivity.this);
-                                    List<User> users = new ArrayList<User>(userlist.values());
-                                    dao.saveContactList(users);
-
-                                    // 获取群聊列表,sdk会把群组存入到EMGroupManager和db中
-                                    EMGroupManager.getInstance().getGroupsFromServer();
-                                    // after login, we join groups in separate threads;
-                                    EMGroupManager.getInstance().joinGroupsAfterLogin();
-                                    return 0;
-                                } catch (EaseMobException e) {
-                                    e.printStackTrace();
-                                }
-                                return -1;
-                            }
-
-                            @Override
-                            protected void onPreExecute() {
-                                super.onPreExecute();
-                                mIMUSers = new ArrayList<String>();
-                                mProgress = new ProgressDialog(MainActivity.this);
-                                mProgress.setMessage("正在获取好友和群聊列表...");
-                                mProgress.setCancelable(false);
-                            }
-
-                            @Override
-                            protected void onPostExecute(Integer integer) {
-                                super.onPostExecute(integer);
-                                if (integer == 0) {
-                                    startActivity(new Intent(MainActivity.this, MainChatActivity.class));
-                                }
-                            }
-                        }.execute();
-                    } else {
-                        startActivity(new Intent(MainActivity.this, MainChatActivity.class));
-                    }
-                    return;
-                } else {
-
-                }
 
         }
         if (mCurrentSelectId != view.getId()) {
@@ -213,32 +127,6 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
-    /**
-     * 设置hearder属性，方便通讯中对联系人按header分类显示，以及通过右侧ABCD...字母栏快速定位联系人
-     *
-     * @param username
-     * @param user
-     */
-    protected void setUserHearder(String username, User user) {
-        String headerName = null;
-        if (!TextUtils.isEmpty(user.getNick())) {
-            headerName = user.getNick();
-        } else {
-            headerName = user.getUsername();
-        }
-        if (username.equals(Constant.NEW_FRIENDS_USERNAME)) {
-            user.setHeader("");
-        } else if (Character.isDigit(headerName.charAt(0))) {
-            user.setHeader("#");
-        } else {
-            user.setHeader(HanziToPinyin.getInstance().get(headerName.substring(0, 1)).get(0).target.substring(0, 1).toUpperCase());
-            char header = user.getHeader().toLowerCase().charAt(0);
-            if (header < 'a' || header > 'z') {
-                user.setHeader("#");
-            }
-        }
-    }
 
 
     /**

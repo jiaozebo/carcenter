@@ -16,7 +16,6 @@ package com.harbinpointech.carcenter.activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.domain.User;
 
 public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
@@ -36,12 +35,12 @@ public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
 	@Override
 	protected void onListItemClick(int position) {
 		if (position != 0) {
-			selectUser = contactAdapter.getItem(position);
-			Intent intent = new Intent(ForwardMessageActivity.this, AlertDialog.class);
-			intent.putExtra("cancel", true);
-			intent.putExtra("titleIsCancel", true);
-			intent.putExtra("msg", getString(R.string.confirm_forward_to, selectUser.getUsername()));
-			startActivityForResult(intent, 1);
+//			selectUser = contactAdapter.getItem(position);
+//			Intent intent = new Intent(ForwardMessageActivity.this, AlertDialog.class);
+//			intent.putExtra("cancel", true);
+//			intent.putExtra("titleIsCancel", true);
+//			intent.putExtra("msg", getString(R.string.confirm_forward_to, selectUser.getUsername()));
+//			startActivityForResult(intent, 1);
 		}
 	}
 

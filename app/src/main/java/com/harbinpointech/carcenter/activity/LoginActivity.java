@@ -25,6 +25,9 @@ import android.widget.Toast;
 
 import com.easemob.EMCallBack;
 import com.easemob.chat.EMChatManager;
+import com.easemob.chat.EMContactManager;
+import com.easemob.chat.EMGroup;
+import com.easemob.chat.EMGroupManager;
 import com.easemob.exceptions.EaseMobException;
 import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
@@ -36,6 +39,8 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * 登陆页面
@@ -48,7 +53,10 @@ public class LoginActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        if (WebHelper.hasLogined()) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        }
         usernameEditText = (EditText) findViewById(R.id.username);
         passwordEditText = (EditText) findViewById(R.id.password);
 
@@ -132,7 +140,7 @@ public class LoginActivity extends BaseActivity {
                             return;
                         }
                         // 用户名、密码更换了，重新登出、登录
-                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null){
+                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null) {
                             DemoApplication.getInstance().logout();
                         }
                         // 调用sdk登陆方法登陆聊天服务器
@@ -141,6 +149,20 @@ public class LoginActivity extends BaseActivity {
                             @Override
                             public void onSuccess() {
                                 // 登陆成功，保存用户名密码
+
+
+                                try {
+                                    EMGroupManager.getInstance().joinGroup("140792997963939");
+                                    EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
+                                    List<String> members = group.getMembers();//获取群成员
+                                    Iterator<String> it = members.iterator();
+                                    while (it.hasNext()) {
+                                        String mem = it.next();
+                                        EMContactManager.getInstance().addContact(mem, "");
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                                 DemoApplication.getInstance().setUserName(username);
                                 DemoApplication.getInstance().setPassword(password);
                                 mProgress.dismiss();
@@ -164,7 +186,7 @@ public class LoginActivity extends BaseActivity {
                                 mProgress.dismiss();
                                 runOnUiThread(new Runnable() {
                                     public void run() {
-                                        if (message.indexOf("not support the capital letters") != -1) {
+                                        if (message != null && message.indexOf("not support the capital letters") != -1) {
                                             Toast.makeText(getApplicationContext(), "用户名不支持大写字母", Toast.LENGTH_SHORT).show();
                                         } else {
                                             Toast.makeText(getApplicationContext(), "登录失败: " + message, Toast.LENGTH_SHORT).show();
