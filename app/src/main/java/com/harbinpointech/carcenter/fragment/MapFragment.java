@@ -126,8 +126,6 @@ public class MapFragment extends SupportMapFragment {
                         .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
 //在地图上添加Marker，并显示
                 Marker m =(Marker) getBaiduMap().addOverlay(option);
-
-
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -23,4 +23,4 @@ local.properties
 proguard/
 
 
-*.o *.lo *.la *.al .libs .[0-9]* *.a *.pyc *.pyo __pycache__ *.rej *~ #*# .#* .*.swp .DS_Store bin gen .settings *.apk *.ap_ *.dex *.class .gradle build local.properties proguard
+# *.o *.lo *.la *.al .libs .[0-9]* *.a *.pyc *.pyo __pycache__ *.rej *~ #*# .#* .*.swp .DS_Store bin gen .settings *.apk *.ap_ *.dex *.class .gradle build local.properties proguard
