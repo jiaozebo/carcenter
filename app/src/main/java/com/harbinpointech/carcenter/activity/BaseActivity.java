@@ -17,6 +17,7 @@ package com.harbinpointech.carcenter.activity;
 import com.easemob.chat.EMChatManager;
 
 import android.app.Activity;
+import android.support.v7.app.ActionBarActivity;
 
 public class BaseActivity extends Activity{
 	@Override

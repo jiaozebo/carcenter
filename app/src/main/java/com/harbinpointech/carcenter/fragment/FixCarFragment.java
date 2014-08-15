@@ -2,6 +2,7 @@ package com.harbinpointech.carcenter.fragment;
 
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -21,6 +22,16 @@ public class FixCarFragment extends Fragment {
         // Required empty public constructor
     }
 
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) {
+            Activity activity = getActivity();
+            if (activity != null) {
+                activity.setTitle("维修");
+            }
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

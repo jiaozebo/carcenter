@@ -329,9 +329,6 @@ public class MainChatActivity extends ActionBarActivity {
 				toAddUsers.put(username, user);
 			}
 			localUsers.putAll(toAddUsers);
-			// 刷新ui
-			if (currentTabIndex == 1)
-				contactListFragment.refresh();
 
 		}
 
@@ -344,9 +341,6 @@ public class MainChatActivity extends ActionBarActivity {
 				userDao.deleteContact(username);
 				inviteMessgeDao.deleteMessage(username);
 			}
-			// 刷新ui
-			if (currentTabIndex == 1)
-				contactListFragment.refresh();
 			updateUnreadLabel();
 
 		}
@@ -411,8 +405,6 @@ public class MainChatActivity extends ActionBarActivity {
 		// 刷新bottom bar消息未读数
 		updateUnreadAddressLable();
 		// 刷新好友页面ui
-		if (currentTabIndex == 1)
-			contactListFragment.refresh();
 	}
 	/**
 	 * 保存邀请等msg

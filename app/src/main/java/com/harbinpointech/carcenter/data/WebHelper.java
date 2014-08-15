@@ -80,7 +80,7 @@ public class WebHelper {
 
     public static int getCars(JSONObject[] params) throws IOException, JSONException {
         JSONObject[] param = new JSONObject[]{null};
-        int result = doPost(URL + "GetCars", param);
+        int result = doPost(URL + "MobileGetCars", param);
         if (result == 200) {
             params[0] = param[0];
         }

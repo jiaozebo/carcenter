@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.harbinpointech.carcenter.activity.MainActivity">
+    <item
+        android:id="@+id/action_remove_messages"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:orderInCategory="100"
+        android:title="清除消息"
+        app:showAsAction="ifRoom" />
+</menu>

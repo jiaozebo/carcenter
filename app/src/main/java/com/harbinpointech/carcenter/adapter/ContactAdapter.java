@@ -152,7 +152,7 @@ public class ContactAdapter extends ArrayAdapter<EMContact>  implements SectionI
 	
 	@Override
 	public EMContact getItem(int position) {
-		return position == 0 ? new User() : super.getItem(position - 1);
+		return position == 0 ? new User("") : super.getItem(position - 1);
 	}
 	
 	@Override

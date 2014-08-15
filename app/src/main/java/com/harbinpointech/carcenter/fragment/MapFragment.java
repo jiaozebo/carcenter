@@ -1,6 +1,7 @@
 package com.harbinpointech.carcenter.fragment;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -44,6 +45,17 @@ public class MapFragment extends SupportMapFragment {
     public MapFragment() {
         // Required empty public constructor
         super();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden) {
+            Activity activity = getActivity();
+            if (activity != null) {
+                activity.setTitle("查看车辆");
+            }
+        }
     }
 
     @Override
@@ -92,10 +104,11 @@ public class MapFragment extends SupportMapFragment {
             public boolean onMarkerClick(Marker marker) {
                 Bundle bundle = marker.getExtraInfo();
                 int index = bundle.getInt("index");
-                try{
+                try {
                     JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
-                }catch (Exception e){
-                    e.printStackTrace();;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ;
                 }
                 return true;
             }
@@ -120,12 +133,12 @@ public class MapFragment extends SupportMapFragment {
                         .fromResource(R.drawable.icon_marka);
 //构建MarkerOption，用于在地图上添加Marker
                 Bundle extrInfo = new Bundle();
-                extrInfo.putInt("index",i);
+                extrInfo.putInt("index", i);
                 OverlayOptions option = new MarkerOptions()
                         .position(point)
                         .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
 //在地图上添加Marker，并显示
-                Marker m =(Marker) getBaiduMap().addOverlay(option);
+                Marker m = (Marker) getBaiduMap().addOverlay(option);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,6 +175,9 @@ public class MapFragment extends SupportMapFragment {
             public void onReceiveLocation(BDLocation location) {
                 String city = location.getCity();
                 ActionBarActivity activity = (ActionBarActivity) getActivity();
+                if (activity == null){
+                    return;
+                }
                 activity.getSupportActionBar().setSubtitle(String.format("%s:%s", "当前城市", city));
                 BaiduMap map = getBaiduMap();
                 if (mLastLocation == null) {

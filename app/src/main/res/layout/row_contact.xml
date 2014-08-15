@@ -66,8 +66,7 @@
                 android:ellipsize="end"
                 android:singleLine="true"
                 android:textColor="#888888"
-                android:textSize="13sp"
-                android:visibility="gone" />
+                android:textSize="13sp" />
         </LinearLayout>
 
         <TextView

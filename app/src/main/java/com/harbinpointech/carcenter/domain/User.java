@@ -16,40 +16,49 @@ package com.harbinpointech.carcenter.domain;
 import com.easemob.chat.EMContact;
 
 public class User extends EMContact {
-	private int unreadMsgCount;
-	private String header;
+    private int unreadMsgCount;
+    private String header;
 
-	public String getHeader() {
-		return header;
-	}
 
-	public void setHeader(String header) {
-		this.header = header;
-	}
+    public User(String name) {
+        this.username = name;
+        this.nick = name;
+    }
+    public User() {
+        this("");
+    }
 
-	public int getUnreadMsgCount() {
-		return unreadMsgCount;
-	}
+    public String getHeader() {
+        return header;
+    }
 
-	public void setUnreadMsgCount(int unreadMsgCount) {
-		this.unreadMsgCount = unreadMsgCount;
-	}
+    public void setHeader(String header) {
+        this.header = header;
+    }
 
-	@Override
-	public int hashCode() {
-		return 17 * getUsername().hashCode();
-	}
+    public int getUnreadMsgCount() {
+        return unreadMsgCount;
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (o == null || !(o instanceof User)) {
-			return false;
-		}
-		return getUsername().equals(((User) o).getUsername());
-	}
+    public void setUnreadMsgCount(int unreadMsgCount) {
+        this.unreadMsgCount = unreadMsgCount;
+    }
 
-	@Override
-	public String toString() {
-		return nick == null ? username : nick;
-	}
+    @Override
+    public int hashCode() {
+        return 17 * getUsername().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof User)) {
+            return false;
+        }
+        return getUsername().equals(((User) o).getUsername());
+    }
+
+    @Override
+    public String toString() {
+        return nick == null ? username : nick;
+    }
 }

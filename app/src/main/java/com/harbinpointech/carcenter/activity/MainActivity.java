@@ -53,9 +53,9 @@ public class MainActivity extends ActionBarActivity {
         IntentFilter intentFilter = new IntentFilter(EMChatManager.getInstance().getNewMessageBroadcastAction());
         intentFilter.setPriority(3);
         registerReceiver(mMsgReceiver, intentFilter);
-        EMChat.getInstance().setAppInited();
 
 
+        setTitle("查看车辆");
     }
 
     @Override
@@ -70,7 +70,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        updateUnreadLabel();
         EMChatManager.getInstance().activityResumed();
     }
 
@@ -129,7 +128,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-
     /**
      * 新消息广播接收者
      */
@@ -139,11 +137,11 @@ public class MainActivity extends ActionBarActivity {
             // 消息id
             String msgId = intent.getStringExtra("msgid");
             // 收到这个广播的时候，message已经在db和内存里了，可以通过id获取mesage对象
-            // EMMessage message =
-            // EMChatManager.getInstance().getMessage(msgId);
+            EMMessage message =
+                    EMChatManager.getInstance().getMessage(msgId);
 
             // 刷新bottom bar消息未读数
-            updateUnreadLabel();
+            updateUnreadLabel(message);
 //            if (currentTabIndex == 0) {
 //                // 当前页面如果为聊天历史页面，刷新此页面
 //                if (chatHistoryFragment != null) {
@@ -157,15 +155,21 @@ public class MainActivity extends ActionBarActivity {
 
     /**
      * 刷新未读消息数
+     *
+     * @param message
      */
-    public void updateUnreadLabel() {
+    public void updateUnreadLabel(EMMessage message) {
         int count = getUnreadMsgCountTotal();
         TextView unreadLabel = (TextView) findViewById(R.id.unread_msg_number);
         if (count > 0) {
-            unreadLabel.setText(String.valueOf(count));
+            unreadLabel.setText("*");
             unreadLabel.setVisibility(View.VISIBLE);
         } else {
             unreadLabel.setVisibility(View.INVISIBLE);
+        }
+        if (message != null) {
+            ContactlistFragment clf = (ContactlistFragment) mFragmentsMap.get(R.id.main_btn_chat);
+            clf.updateUnreadLable(message);
         }
     }
 

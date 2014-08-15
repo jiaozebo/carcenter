@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.harbinpointech.carcenter.activity.MainActivity">
+    <item
+        android:id="@+id/action_view_detail"
+        android:icon="@android:drawable/ic_menu_view"
+        android:orderInCategory="100"
+        android:title="显示群组信息"
+        app:showAsAction="ifRoom" />
+</menu>
