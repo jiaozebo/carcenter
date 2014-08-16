@@ -80,7 +80,7 @@ public class DemoApplication extends Application {
 		// 获取到EMChatOptions对象
 		EMChatOptions options = EMChatManager.getInstance().getChatOptions();
 		// 默认添加好友时，是不需要验证的，改成需要验证
-		options.setAcceptInvitationAlways(false);
+		options.setAcceptInvitationAlways(true);
 		// 设置收到消息是否有新消息通知，默认为true
 		options.setNotificationEnable(PreferenceUtils.getInstance(applicationContext).getSettingMsgNotification());
 		// 设置收到消息是否有声音提示，默认为true

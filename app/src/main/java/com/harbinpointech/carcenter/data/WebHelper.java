@@ -34,24 +34,6 @@ public class WebHelper {
 
     private static String JSESSIONID = null;
 
-    public static int login_m(String usr, String password) throws JSONException, IOException, NoSuchAlgorithmException {
-        JSESSIONID = null;
-        byte[] md5Pwd = MD5(password.getBytes());
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < md5Pwd.length; i++) {
-            sb.append(String.format(i == md5Pwd.length - 1 ? "%02X" : "%02X-", md5Pwd[i]));
-        }
-        String pwdEncrypt = sb.toString();
-        JSONObject[] jsons = new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\",\"%s\":\"%s\"}", "name", usr, "password", pwdEncrypt))};
-        int result = doPost(URL + "Login_m?sessionid=123", jsons);
-        if (result == 200) {
-            JSESSIONID = jsons[0].getString("d");
-            return TextUtils.isEmpty(JSESSIONID) ? 1 : 0;
-        } else {
-            return result;
-        }
-    }
-
     public static int login(String usr, String password) throws JSONException, IOException, NoSuchAlgorithmException {
         JSESSIONID = null;
         byte[] md5Pwd = MD5(password.getBytes());
@@ -69,37 +51,49 @@ public class WebHelper {
         }
     }
 
-    public static int getAllCarPositions(JSONObject[] carPositions) throws IOException, JSONException {
-        JSONObject[] param = new JSONObject[]{null};
-        int result = doPost(URL + "GetCarTrajectory", param);
-        if (result == 200) {
-            carPositions[0] = param[0];
-        }
-        return result;
-    }
-
     public static int getCars(JSONObject[] params) throws IOException, JSONException {
         JSONObject[] param = new JSONObject[]{null};
         int result = doPost(URL + "MobileGetCars", param);
         if (result == 200) {
             params[0] = param[0];
+            result = 0;
         }
-        result = 0;
-//        param[0] = new JSONObject("{\"name\":\"car1\",\"lat\":}");
-
         return result;
     }
 
-    public static int getCars2(JSONObject[] params) throws IOException, JSONException {
-        JSONObject[] param = new JSONObject[]{null};
-        int result = doPost(URL + "GetCars", param);
+    /**
+     * public ServiceBaseInfo MobileGetCarBaseInfos(string carName, bool isGetImg)
+     * @param params
+     * @param carName   车牌号
+     * @param getCarImg 是否获取图片
+     * @return
+     */
+    public static int getCarBaseInfos(JSONObject[]params, String carName, boolean getCarImg) throws JSONException, IOException {
+        params[0] = new JSONObject(String.format("{\"%s\":\"%s\",\"%s\":\"%s\"}", "carName", carName, "isGetImg", getCarImg));
+        int result = doPost(URL + "MobileGetCarBaseInfos", params);
         if (result == 200) {
-            params[0] = param[0];
+            return params[0].getBoolean("d") ? 0 : 1;
+        } else {
+            return result;
         }
-        result = 0;
-//        param[0] = new JSONObject("{\"name\":\"car1\",\"lat\":}");
+    }
 
-        return result;
+    /**
+     * public ServiceDevice[] MobileGetCarDeviceInfo(string CarName)
+     * @param params
+     * @param carName   车牌号
+     * @return
+     * @throws JSONException
+     * @throws IOException
+     */
+    public static int getCarPluginInfos(JSONObject[]params, String carName) throws JSONException, IOException {
+        params[0] = new JSONObject(String.format("{\"%s\":\"%s\"}", "carName", carName));
+        int result = doPost(URL + "MobileGetCarDeviceInfo", params);
+        if (result == 200) {
+            return params[0].getBoolean("d") ? 0 : 1;
+        } else {
+            return result;
+        }
     }
 
     public static byte[] MD5(byte[] input) throws NoSuchAlgorithmException {
@@ -117,7 +111,7 @@ public class WebHelper {
             request.setEntity(entity);
         } else {
         }
-        Log.w("WEB_HELPER_request",url + json[0]);
+        Log.w("WEB_HELPER_request",url + ", " + json[0]);
         if (!TextUtils.isEmpty(JSESSIONID)) {
             request.setHeader("Cookie", "ASP.NET_SessionId=" + JSESSIONID);
         }

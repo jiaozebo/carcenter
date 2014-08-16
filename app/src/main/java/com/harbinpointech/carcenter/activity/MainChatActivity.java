@@ -56,6 +56,7 @@ import com.harbinpointech.carcenter.db.UserDao;
 import com.harbinpointech.carcenter.domain.InviteMessage;
 import com.harbinpointech.carcenter.domain.InviteMessage.InviteMesageStatus;
 import com.harbinpointech.carcenter.domain.User;
+import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.utils.CommonUtils;
 import com.easemob.util.HanziToPinyin;
 

@@ -14,11 +14,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.baidu.mapapi.SDKInitializer;
-import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMMessage;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
 

@@ -149,26 +149,11 @@ public class LoginActivity extends BaseActivity {
                             @Override
                             public void onSuccess() {
                                 // 登陆成功，保存用户名密码
-
-
-                                try {
-                                    EMGroupManager.getInstance().joinGroup("140792997963939");
-                                    EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
-                                    List<String> members = group.getMembers();//获取群成员
-                                    Iterator<String> it = members.iterator();
-                                    while (it.hasNext()) {
-                                        String mem = it.next();
-                                        EMContactManager.getInstance().addContact(mem, "");
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
                                 DemoApplication.getInstance().setUserName(username);
                                 DemoApplication.getInstance().setPassword(password);
                                 mProgress.dismiss();
                                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                 finish();
-//
                             }
 
                             @Override

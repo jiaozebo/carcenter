@@ -11,13 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.harbinpointech.carcenter.activity;
+package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,16 +30,26 @@ import android.widget.TextView;
 import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMContact;
+import com.easemob.chat.EMContactListener;
+import com.easemob.chat.EMContactManager;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import com.easemob.chat.EMMessage;
 import com.easemob.exceptions.EaseMobException;
+import com.harbinpointech.carcenter.Constant;
+import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.activity.ChatActivity;
+import com.harbinpointech.carcenter.activity.MainActivity;
+import com.harbinpointech.carcenter.domain.InviteMessage;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 联系人列表页
@@ -77,6 +88,19 @@ public class ContactlistFragment extends ListFragment {
             @Override
             protected Integer doInBackground(Void... params) {
                 try {
+                    try {
+                        EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
+                        List<String> members = group.getMembers();//获取群成员
+                        Iterator<String> it = members.iterator();
+                        while (it.hasNext()) {
+                            String mem = it.next();
+                            EMContactManager.getInstance().addContact(mem, "i'm in vehicle group..");
+                        }
+                        EMGroupManager.getInstance().joinGroup("140792997963939");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     List<String> usernames = EMChatManager.getInstance().getContactUserNames();
                     for (String name : usernames) {
                         mIMUSers.add(new User(name));
@@ -146,6 +170,8 @@ public class ContactlistFragment extends ListFragment {
                     }
                 });
                 EMChat.getInstance().setAppInited();
+
+                EMContactManager.getInstance().setContactListener(new MyContactListener());
             }
         }.execute();
 
@@ -210,7 +236,7 @@ public class ContactlistFragment extends ListFragment {
         String userName = message.getFrom();
         EMMessage.ChatType ct = message.getChatType();
         ArrayAdapter<EMContact> adapter = (ArrayAdapter<EMContact>) getListAdapter();
-        if (adapter == null){
+        if (adapter == null) {
             return;
         }
         if (ct == EMMessage.ChatType.Chat) {
@@ -271,5 +297,56 @@ public class ContactlistFragment extends ListFragment {
 //        return super.onContextItemSelected(item);
 //    }
 
+
+    /**
+     * 联系人变化listener
+     */
+    private class MyContactListener implements EMContactListener {
+
+        @Override
+        public void onContactAdded(List<String> usernameList) {
+            List<User> usrs = new ArrayList<User>();
+            for (String userName : usernameList) {
+                usrs.add(new User(userName));
+            }
+
+            ArrayAdapter adapter = (ArrayAdapter) getListAdapter();
+            adapter.addAll(usrs);
+        }
+
+        @Override
+        public void onContactDeleted(List<String> usernameList) {
+            List<String> usrs = new ArrayList<String>();
+            usrs.addAll(usernameList);
+            ArrayAdapter adapter = (ArrayAdapter) getListAdapter();
+            for (int i = 0; i < adapter.getCount(); i++) {
+                for (String usr : usrs) {
+                    EMContact c = (EMContact) adapter.getItem(i);
+                    if (c.getUsername().equals(usr)) {
+                        adapter.remove(c);
+                        usrs.remove(usr);
+                        break;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onContactInvited(String username, String reason) {
+            // 接到邀请的消息，如果不处理(同意或拒绝)，掉线后，服务器会自动再发过来，所以客户端不要重复提醒
+            Log.i("Contact", String.format("recv invited request~ (%s,%s)", username, reason));
+        }
+
+        @Override
+        public void onContactAgreed(String username) {
+            Log.i("Contact", username + "同意了你的好友请求");
+
+        }
+
+        @Override
+        public void onContactRefused(String username) {
+            // 参考同意，被邀请实现此功能,demo未实现
+        }
+    }
 
 }
