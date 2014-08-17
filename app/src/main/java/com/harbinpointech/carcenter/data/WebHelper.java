@@ -72,7 +72,7 @@ public class WebHelper {
         params[0] = new JSONObject(String.format("{\"%s\":\"%s\",\"%s\":\"%s\"}", "carName", carName, "isGetImg", getCarImg));
         int result = doPost(URL + "MobileGetCarBaseInfos", params);
         if (result == 200) {
-            return params[0].getBoolean("d") ? 0 : 1;
+            return 0;
         } else {
             return result;
         }
@@ -90,7 +90,7 @@ public class WebHelper {
         params[0] = new JSONObject(String.format("{\"%s\":\"%s\"}", "carName", carName));
         int result = doPost(URL + "MobileGetCarDeviceInfo", params);
         if (result == 200) {
-            return params[0].getBoolean("d") ? 0 : 1;
+            return 0;
         } else {
             return result;
         }

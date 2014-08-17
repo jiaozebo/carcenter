@@ -75,8 +75,13 @@
 
     <style name="horizontal_slide" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="android:windowAnimationStyle">@style/AnimFade2</item>
+        <item name="android:actionBarStyle">@style/Widget.App.ActionBar</item>
+    </style>
+    <style name="Widget.App.ActionBar" parent="Widget.AppCompat.ActionBar.Solid">
+        <item name="android:indeterminateProgressStyle">@style/IndeterminateProgress</item>
     </style>
 
+    <style name="IndeterminateProgress" parent="@android:style/Widget.ProgressBar.Small"/>
     <!--
     <style name="horizontal_slide2" parent="android:style/Theme.Holo.Light.NoActionBar">
         <item name="android:windowAnimationStyle">@style/AnimFade2</item>

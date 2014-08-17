@@ -2,6 +2,7 @@ package com.harbinpointech.carcenter.fragment;
 
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -23,6 +24,7 @@ import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.activity.VehicleInfoActivity;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
@@ -106,6 +108,9 @@ public class MapFragment extends SupportMapFragment {
                 int index = bundle.getInt("index");
                 try {
                     JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
+                    Intent i = new Intent(getActivity(), VehicleInfoActivity.class);
+                    i.putExtra(VehicleInfoActivity.EXTRA_CARNAME, car.getString("CarName"));
+                    startActivity(i);
                 } catch (Exception e) {
                     e.printStackTrace();
                     ;

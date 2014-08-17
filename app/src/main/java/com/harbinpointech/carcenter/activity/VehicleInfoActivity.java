@@ -1,23 +1,14 @@
 package com.harbinpointech.carcenter.activity;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
+import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ListFragment;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.os.Bundle;
+import android.support.v4.app.ListFragment;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Pair;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +22,11 @@ import com.harbinpointech.carcenter.util.AsyncTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class VehicleInfoActivity extends ActionBarActivity {
     public static final String EXTRA_CARNAME = "EXTRA_CARNAME";
@@ -183,7 +179,6 @@ public class VehicleInfoActivity extends ActionBarActivity {
                 @Override
                 protected void onPostExecute(Integer result) {
                     super.onPostExecute(result);
-
                     if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
                         List<Pair<String,String>> items = new ArrayList<Pair<String, String>>();
                         try {
@@ -197,8 +192,48 @@ public class VehicleInfoActivity extends ActionBarActivity {
                             e.printStackTrace();
                         }
 
-//                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>();
-                    } else {;
+                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item,items){
+                            @Override
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                if (convertView == null){
+                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item,parent,false);
+                                }
+                                TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_name);
+                                TextView tvValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_value);
+                                Pair<String,String >p = getItem(position);
+                                tvName.setText(p.first);
+                                tvValue.setText(p.second);
+                                return convertView;
+                            }
+                        };
+                        setListAdapter(adapter);
+                    } else {
+                        List<Pair<String,String>> items = new ArrayList<Pair<String, String>>();
+                        try {
+                            if (mContent != null) {
+                                items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
+                                items.add(new Pair<String, String>("车牌号：", mContent.getString("CarName")));
+                                items.add(new Pair<String, String>("车辆管理员：", mContent.getString("Manager")));
+                                items.add(new Pair<String, String>("车管员电话：", mContent.getString("ManagerPhone")));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item,items){
+                            @Override
+                            public View getView(int position, View convertView, ViewGroup parent) {
+                                if (convertView == null){
+                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item,parent,false);
+                                }
+                                TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_name);
+                                TextView tvValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_value);
+                                Pair<String,String >p = getItem(position);
+                                tvName.setText(p.first);
+                                tvValue.setText(p.second);
+                                return convertView;
+                            }
+                        };
+                        setListAdapter(adapter);
                     }
 
                 }
