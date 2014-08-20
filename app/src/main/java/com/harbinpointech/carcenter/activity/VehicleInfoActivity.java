@@ -14,6 +14,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.harbinpointech.carcenter.R;
@@ -58,15 +60,40 @@ public class VehicleInfoActivity extends ActionBarActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i2) {
 
-    }
+            }
+
+            @Override
+            public void onPageSelected(int i) {
+                RadioButton vehicle_info_base_info_radio = (RadioButton) findViewById(R.id.vehicle_info_base_info_radio);
+                vehicle_info_base_info_radio.setChecked(i == 0);
+
+                RadioButton vehicle_info_plugins_info_radio = (RadioButton) findViewById(R.id.vehicle_info_plugins_info_radio);
+                vehicle_info_plugins_info_radio.setChecked(i != 0);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {
+
+            }
+        });
+        RadioButton vehicle_info_base_info_radio = (RadioButton) findViewById(R.id.vehicle_info_base_info_radio);
+        vehicle_info_base_info_radio.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mViewPager.setCurrentItem(0, true);
+                } else {
+                    mViewPager.setCurrentItem(1, true);
+                }
+            }
+        });
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.vehicle_info, menu);
-        return true;
+        getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -75,7 +102,8 @@ public class VehicleInfoActivity extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        if (id == android.R.id.home) {
+            finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -146,6 +174,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
         @Override
         public void onActivityCreated(@Nullable Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
+            setEmptyText("未查询到任何信息");
             new AsyncTask<Void, Integer, Integer>() {
                 JSONObject mContent = null;
 
@@ -180,7 +209,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                 protected void onPostExecute(Integer result) {
                     super.onPostExecute(result);
                     if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
-                        List<Pair<String,String>> items = new ArrayList<Pair<String, String>>();
+                        List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
                             if (mContent != null) {
                                 items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
@@ -192,15 +221,15 @@ public class VehicleInfoActivity extends ActionBarActivity {
                             e.printStackTrace();
                         }
 
-                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item,items){
+                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item, items) {
                             @Override
                             public View getView(int position, View convertView, ViewGroup parent) {
-                                if (convertView == null){
-                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item,parent,false);
+                                if (convertView == null) {
+                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item, parent, false);
                                 }
                                 TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_name);
                                 TextView tvValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_value);
-                                Pair<String,String >p = getItem(position);
+                                Pair<String, String> p = getItem(position);
                                 tvName.setText(p.first);
                                 tvValue.setText(p.second);
                                 return convertView;
@@ -208,7 +237,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                         };
                         setListAdapter(adapter);
                     } else {
-                        List<Pair<String,String>> items = new ArrayList<Pair<String, String>>();
+                        List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
                             if (mContent != null) {
                                 items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
@@ -219,15 +248,15 @@ public class VehicleInfoActivity extends ActionBarActivity {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item,items){
+                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item, items) {
                             @Override
                             public View getView(int position, View convertView, ViewGroup parent) {
-                                if (convertView == null){
-                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item,parent,false);
+                                if (convertView == null) {
+                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item, parent, false);
                                 }
                                 TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_name);
                                 TextView tvValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_value);
-                                Pair<String,String >p = getItem(position);
+                                Pair<String, String> p = getItem(position);
                                 tvName.setText(p.first);
                                 tvValue.setText(p.second);
                                 return convertView;

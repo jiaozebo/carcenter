@@ -371,7 +371,11 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
             toChatUsername = getIntent().getStringExtra("groupId");
             group = EMGroupManager.getInstance().getGroup(toChatUsername);
         }
-        setTitle(toChatUsername);
+        String title = getIntent().getStringExtra("nick");
+        if (TextUtils.isEmpty(title)) {
+            title = toChatUsername;
+        }
+        setTitle(title);
         conversation = EMChatManager.getInstance().getConversation(toChatUsername);
         // 把此会话的未读数置为0
         conversation.resetUnsetMsgCount();
@@ -687,7 +691,7 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
     /**
      * 发送文本消息
      *
-     * @param content  message content
+     * @param content message content
      */
     private void sendText(final String content) {
 
@@ -905,7 +909,7 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
             return;
         }
         if (file.length() > 10 * 1024 * 1024) {
-            Toast.makeText(getApplicationContext(), "文件不能大于10M",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "文件不能大于10M", Toast.LENGTH_SHORT).show();
             return;
         }
 

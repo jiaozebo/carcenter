@@ -32,6 +32,10 @@ public class WebHelper {
         return !TextUtils.isEmpty(JSESSIONID);
     }
 
+    public static void logout(){
+        JSESSIONID = null;
+    }
+
     private static String JSESSIONID = null;
 
     public static int login(String usr, String password) throws JSONException, IOException, NoSuchAlgorithmException {

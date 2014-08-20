@@ -14,19 +14,31 @@
 package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
+import android.text.Layout;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.easemob.EMCallBack;
 import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMContact;
@@ -39,8 +51,12 @@ import com.easemob.exceptions.EaseMobException;
 import com.harbinpointech.carcenter.Constant;
 import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
+
+import android.app.AlertDialog;
+
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.MainActivity;
+import com.harbinpointech.carcenter.db.UserDao;
 import com.harbinpointech.carcenter.domain.InviteMessage;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.util.AsyncTask;
@@ -60,6 +76,7 @@ public class ContactlistFragment extends ListFragment {
     private InputMethodManager inputMethodManager;
 
     private List<EMContact> mIMUSers;
+    private UserDao mUserDao;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -81,13 +98,60 @@ public class ContactlistFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        mUserDao = new UserDao(getActivity());
         registerForContextMenu(getListView());
-
+        final String username = getActivity().getIntent().getStringExtra("username");
+        final String password = getActivity().getIntent().getStringExtra("password");
         new AsyncTask<Void, Integer, Integer>() {
+            boolean mLoginSuccessed = false;
 
             @Override
             protected Integer doInBackground(Void... params) {
                 try {
+                    if (username == null || (username.equals(DemoApplication.getInstance().getUserName()) && password.equals(DemoApplication.getInstance().getPassword()))) {
+                        // 已经登录过，避免重复登录
+                        mLoginSuccessed = true;
+                    } else {
+                        // 用户名、密码更换了，重新登出、登录
+                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null) {
+                            DemoApplication.getInstance().logout();
+                        }
+                        // 调用sdk登陆方法登陆聊天服务器
+                        final byte[] lock = new byte[0];
+                        EMChatManager.getInstance().login(username, password, new EMCallBack() {
+
+                            @Override
+                            public void onSuccess() {
+                                // 登陆成功，保存用户名密码
+                                DemoApplication.getInstance().setUserName(username);
+                                DemoApplication.getInstance().setPassword(password);
+                                mLoginSuccessed = true;
+                                synchronized (lock) {
+                                    lock.notify();
+                                }
+                            }
+
+                            @Override
+                            public void onProgress(int progress, final String status) {
+
+                            }
+
+                            @Override
+                            public void onError(int code, final String message) {
+                                mLoginSuccessed = false;
+                                synchronized (lock) {
+                                    lock.notify();
+                                }
+                            }
+                        });
+
+                        synchronized (lock) {
+                            lock.wait();
+                        }
+                    }
+                    if (!mLoginSuccessed) {
+                        return -1;
+                    }
                     try {
                         EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
                         List<String> members = group.getMembers();//获取群成员
@@ -97,13 +161,18 @@ public class ContactlistFragment extends ListFragment {
                             EMContactManager.getInstance().addContact(mem, "i'm in vehicle group..");
                         }
                         EMGroupManager.getInstance().joinGroup("140792997963939");
+
+
+                        EMGroupManager.getInstance().getGroupsFromServer();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
                     List<String> usernames = EMChatManager.getInstance().getContactUserNames();
                     for (String name : usernames) {
-                        mIMUSers.add(new User(name));
+                        User u = new User(name);
+                        u.setNick(PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(name, name));
+                        mIMUSers.add(u);
                     }
 
 //                    Map<String, User> userlist = new HashMap<String, User>();
@@ -134,13 +203,22 @@ public class ContactlistFragment extends ListFragment {
 //                    dao.saveContactList(users);
 
                     // 获取群聊列表,sdk会把群组存入到EMGroupManager和db中
-                    List<EMGroup> groups = EMGroupManager.getInstance().getGroupsFromServer();
-
-                    mIMUSers.addAll(0, groups);
-
+                    try {
+//                         EMGroupManager.getInstance().getGroupsFromServer();
+                        List<EMGroup> groups = EMGroupManager.getInstance().getAllGroups();
+                        mIMUSers.addAll(0, groups);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        EMGroup group = new EMGroup("140792997963939");
+                        group.setGroupName("群组");
+                        group.setNick("群组");
+                        mIMUSers.add(0, group);
+                    }
                     // after login, we join groups in separate threads;
                     return 0;
                 } catch (EaseMobException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 return -1;
@@ -183,7 +261,11 @@ public class ContactlistFragment extends ListFragment {
         TextView unread = (TextView) convertView.findViewById(R.id.unread_msg_number);
         unread.setVisibility(View.INVISIBLE);
         if (c instanceof User) {
-            text.setText(c.getUsername());
+            String nik = c.getNick();
+            if (TextUtils.isEmpty(nik)) {
+                nik = c.getUsername();
+            }
+            text.setText(nik);
             text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
             if (((User) c).getUnreadMsgCount() > 0) {
                 unread.setText(String.valueOf(((User) c).getUnreadMsgCount()));
@@ -217,7 +299,7 @@ public class ContactlistFragment extends ListFragment {
             User u = (User) c;
             u.setUnreadMsgCount(0);
             // demo中直接进入聊天页面，实际一般是进入用户详情页
-            startActivityForResult(new Intent(getActivity(), ChatActivity.class).putExtra("userId", c.getUsername()), 1000);
+            startActivityForResult(new Intent(getActivity(), ChatActivity.class).putExtra("userId", c.getUsername()).putExtra("nick", c.getNick()), 1000);
         }
         initView(v, c);
     }
@@ -262,40 +344,69 @@ public class ContactlistFragment extends ListFragment {
         adapter.notifyDataSetChanged();
     }
 
-    //    @Override
-//    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-//        super.onCreateContextMenu(menu, v, menuInfo);
-//        // 长按前两个不弹menu
-//        if (((AdapterContextMenuInfo) menuInfo).position > 2) {
-//            getActivity().getMenuInflater().inflate(R.menu.context_contact_list, menu);
-//        }
-//    }
-//
-//    @Override
-//    public boolean onContextItemSelected(MenuItem item) {
-//        if (item.getItemId() == R.id.delete_contact) {
-//            EMContact contact = adapter.getItem(((AdapterContextMenuInfo) item.getMenuInfo()).position);
-//            if (cont)
-//            User tobeDeleteUser = adapter.getItem(((AdapterContextMenuInfo) item.getMenuInfo()).position);
-//            // 删除此联系人
-//            deleteContact(tobeDeleteUser);
-//            // 删除相关的邀请消息
-//            InviteMessgeDao dao = new InviteMessgeDao(getActivity());
-//            dao.deleteMessage(tobeDeleteUser.getUsername());
-//            return true;
-//        } else if (item.getItemId() == R.id.add_to_blacklist) {
-//            User user = adapter.getItem(((AdapterContextMenuInfo) item.getMenuInfo()).position);
-//            try {
-//                //加入到黑名单
-//                EMContactManager.getInstance().addUserToBlackList(user.getUsername(), true);
-//                Toast.makeText(getActivity(), "移入黑名单成功", Toast.LENGTH_SHORT).show();
-//            } catch (EaseMobException e) {
-//                e.printStackTrace();
-//                Toast.makeText(getActivity(), "移入黑名单失败", Toast.LENGTH_SHORT).show();
-//            }
-//        }
-//        return super.onContextItemSelected(item);
-//    }
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        // 长按前两个不弹menu
+        EMContact c = (EMContact) getListView().getItemAtPosition(((AdapterView.AdapterContextMenuInfo) menuInfo).position);
+        if (c instanceof User) {
+            getActivity().getMenuInflater().inflate(R.menu.context_contact_list, menu);
+        }
+    }
+
+    //
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        final User u = (User) getListView().getItemAtPosition(info.position);
+        final EditText nik = new EditText(getActivity());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        nik.setLayoutParams(lp);
+
+        new AlertDialog.Builder(getActivity()).setTitle("请输入备注名称").setView(nik).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                new AsyncTask<Void, Integer, Integer>() {
+                    ProgressDialog mDlg = null;
+
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        mDlg = new ProgressDialog(getActivity());
+                        mDlg.setMessage("请稍等...");
+                        mDlg.setCancelable(false);
+                        mDlg.show();
+                    }
+
+                    @Override
+                    protected Integer doInBackground(Void... params) {
+                        String nike = nik.getText().toString();
+                        if (!TextUtils.isEmpty(nike)) {
+                            u.setNick(nike);
+                            return 0;
+                        }
+                        return -1;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Integer integer) {
+                        super.onPostExecute(integer);
+                        mDlg.dismiss();
+                        if (integer == 0) {
+                            PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString(u.getUsername(), nik.getText().toString()).commit();
+                            BaseAdapter ba = (BaseAdapter) getListAdapter();
+                            ba.notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(getActivity(), "昵称不能为空", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }.execute();
+            }
+        }).setNegativeButton("取消", null).show();
+        return true;
+    }
 
 
     /**
@@ -307,11 +418,14 @@ public class ContactlistFragment extends ListFragment {
         public void onContactAdded(List<String> usernameList) {
             List<User> usrs = new ArrayList<User>();
             for (String userName : usernameList) {
-                usrs.add(new User(userName));
+                User u = new User(userName);
+                mUserDao.saveContact(u);
+                usrs.add(u);
             }
 
             ArrayAdapter adapter = (ArrayAdapter) getListAdapter();
             adapter.addAll(usrs);
+
         }
 
         @Override
@@ -325,6 +439,7 @@ public class ContactlistFragment extends ListFragment {
                     if (c.getUsername().equals(usr)) {
                         adapter.remove(c);
                         usrs.remove(usr);
+                        mUserDao.deleteContact(usr);
                         break;
                     }
                 }

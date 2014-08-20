@@ -76,6 +76,16 @@ public class SettingsActivity extends PreferenceActivity {
         bindPreferenceSummaryToValue(findPreference("notifications_new_message"));
         bindPreferenceSummaryToValue(findPreference("notifications_new_message_sound"));
         bindPreferenceSummaryToValue(findPreference("notifications_new_message_vibrate"));
+
+        Preference quite = findPreference("key_quite");
+        quite.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                setResult(MainActivity.RESULT_QUIT);
+                finish();
+                return true;
+            }
+        });
     }
 
     /**

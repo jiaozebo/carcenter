@@ -133,54 +133,13 @@ public class LoginActivity extends BaseActivity {
 
                     if (integer == 0) {
                         // 如果用户名密码都有，直接进入主页面
-                        if (username.equals(DemoApplication.getInstance().getUserName()) && password.equals(DemoApplication.getInstance().getPassword())) {
-                            mProgress.dismiss();
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            finish();
-                            return;
-                        }
-                        // 用户名、密码更换了，重新登出、登录
-                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null) {
-                            DemoApplication.getInstance().logout();
-                        }
-                        // 调用sdk登陆方法登陆聊天服务器
-                        EMChatManager.getInstance().login(username, password, new EMCallBack() {
-
-                            @Override
-                            public void onSuccess() {
-                                // 登陆成功，保存用户名密码
-                                DemoApplication.getInstance().setUserName(username);
-                                DemoApplication.getInstance().setPassword(password);
-                                mProgress.dismiss();
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                finish();
-                            }
-
-                            @Override
-                            public void onProgress(int progress, final String status) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mProgress.setMessage(status);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onError(int code, final String message) {
-                                mProgress.dismiss();
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        if (message != null && message.indexOf("not support the capital letters") != -1) {
-                                            Toast.makeText(getApplicationContext(), "用户名不支持大写字母", Toast.LENGTH_SHORT).show();
-                                        } else {
-                                            Toast.makeText(getApplicationContext(), "登录失败: " + message, Toast.LENGTH_SHORT).show();
-                                        }
-
-                                    }
-                                });
-                            }
-                        });
+                        mProgress.dismiss();
+                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                        i.putExtra("username",username);
+                        i.putExtra("password",password);
+                        startActivity(i);
+                        finish();
+                        return;
                     } else {
                         mProgress.dismiss();
                         Toast.makeText(LoginActivity.this, "登录不成功", Toast.LENGTH_SHORT).show();

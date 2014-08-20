@@ -17,7 +17,9 @@ import com.baidu.mapapi.SDKInitializer;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMMessage;
+import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
@@ -26,6 +28,8 @@ import java.util.HashMap;
 
 public class MainActivity extends ActionBarActivity {
 
+    public static final int REQUEST_SETTING = 1000;
+    public static final int RESULT_QUIT = 1000;
     private int mCurrentSelectId;
     private boolean useDemo = false;
     private NewMessageBroadcastReceiver mMsgReceiver;
@@ -121,12 +125,21 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTING);
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_SETTING && resultCode == RESULT_QUIT){
+            DemoApplication.getInstance().logout();
+            WebHelper.logout();
+            finish();
+        }
+    }
 
     /**
      * 新消息广播接收者
