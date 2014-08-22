@@ -18,6 +18,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.text.Layout;
@@ -25,6 +26,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,6 +80,7 @@ public class ContactlistFragment extends ListFragment {
 
     private List<EMContact> mIMUSers;
     private UserDao mUserDao;
+    private ProgressDialog mDlg;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -97,7 +101,13 @@ public class ContactlistFragment extends ListFragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         super.onActivityCreated(savedInstanceState);
+
+
+        mDlg = new ProgressDialog(getActivity());
+        mDlg.setMessage("请稍等...");
+        mDlg.setCancelable(false);
         mUserDao = new UserDao(getActivity());
         registerForContextMenu(getListView());
         final String username = getActivity().getIntent().getStringExtra("username");
@@ -350,44 +360,121 @@ public class ContactlistFragment extends ListFragment {
         // 长按前两个不弹menu
         EMContact c = (EMContact) getListView().getItemAtPosition(((AdapterView.AdapterContextMenuInfo) menuInfo).position);
         if (c instanceof User) {
-            getActivity().getMenuInflater().inflate(R.menu.context_contact_list, menu);
+            getActivity().getMenuInflater().inflate(R.menu.context_contact_mdy_user_nick, menu);
+        } else {
+            getActivity().getMenuInflater().inflate(R.menu.context_contact_delete_group, menu);
         }
     }
 
     //
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        final User u = (User) getListView().getItemAtPosition(info.position);
-        final EditText nik = new EditText(getActivity());
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        nik.setLayoutParams(lp);
 
-        new AlertDialog.Builder(getActivity()).setTitle("请输入备注名称").setView(nik).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        if (item.getItemId() == R.id.mdy_nick) {
+            final User u = (User) getListView().getItemAtPosition(info.position);
+            final EditText nik = new EditText(getActivity());
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            nik.setLayoutParams(lp);
+
+            new AlertDialog.Builder(getActivity()).setTitle("请输入备注名称").setView(nik).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    new AsyncTask<Void, Integer, Integer>() {
+
+                        @Override
+                        protected void onPreExecute() {
+                            super.onPreExecute();
+                            mDlg.show();
+                        }
+
+                        @Override
+                        protected Integer doInBackground(Void... params) {
+                            String nike = nik.getText().toString();
+                            if (!TextUtils.isEmpty(nike)) {
+                                u.setNick(nike);
+                                return 0;
+                            }
+                            return -1;
+                        }
+
+                        @Override
+                        protected void onPostExecute(Integer integer) {
+                            super.onPostExecute(integer);
+                            mDlg.dismiss();
+                            if (integer == 0) {
+                                PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString(u.getUsername(), nik.getText().toString()).commit();
+                                BaseAdapter ba = (BaseAdapter) getListAdapter();
+                                ba.notifyDataSetChanged();
+                            } else {
+                                Toast.makeText(getActivity(), "昵称不能为空", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }.execute();
+                }
+            }).setNegativeButton("取消", null).show();
+        } else {
+            final EMGroup g = (EMGroup) getListView().getItemAtPosition(info.position);
+            if (EMChatManager.getInstance().getCurrentUser().equals(g.getOwner())) {
+                new AlertDialog.Builder(getActivity()).setMessage("您是群主，退出群则同时会解散该群，您确定要退出吗？").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new AsyncTask<Void, Integer, Integer>() {
+                            @Override
+                            protected Integer doInBackground(Void... params) {
+                                try {
+                                    EMGroupManager.getInstance().exitAndDeleteGroup(g.getGroupId());
+                                    return 0;
+                                } catch (EaseMobException e) {
+                                    e.printStackTrace();
+                                    return -1;
+
+                                }
+                            }
+
+                            @Override
+                            protected void onPreExecute() {
+                                super.onPreExecute();
+                                mDlg.show();
+                            }
+
+                            @Override
+                            protected void onPostExecute(Integer integer) {
+                                super.onPostExecute(integer);
+                                mDlg.dismiss();
+                                if (integer == 0) {
+                                    mIMUSers.remove(info.position);
+                                    BaseAdapter ba = (BaseAdapter) getListAdapter();
+                                    ba.notifyDataSetChanged();
+                                } else {
+                                    Toast.makeText(getActivity(), "删除群组失败", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }.execute();
+
+                    }
+                }).setNegativeButton("取消", null).setTitle(g.getGroupName()).show();
+                return true;
+            } else {
                 new AsyncTask<Void, Integer, Integer>() {
-                    ProgressDialog mDlg = null;
+                    @Override
+                    protected Integer doInBackground(Void... params) {
+                        try {
+                            EMGroupManager.getInstance().exitFromGroup(g.getGroupId());
+                            return 0;
+                        } catch (EaseMobException e) {
+                            e.printStackTrace();
+                            return -1;
+
+                        }
+                    }
 
                     @Override
                     protected void onPreExecute() {
                         super.onPreExecute();
-                        mDlg = new ProgressDialog(getActivity());
-                        mDlg.setMessage("请稍等...");
-                        mDlg.setCancelable(false);
                         mDlg.show();
-                    }
-
-                    @Override
-                    protected Integer doInBackground(Void... params) {
-                        String nike = nik.getText().toString();
-                        if (!TextUtils.isEmpty(nike)) {
-                            u.setNick(nike);
-                            return 0;
-                        }
-                        return -1;
                     }
 
                     @Override
@@ -395,19 +482,122 @@ public class ContactlistFragment extends ListFragment {
                         super.onPostExecute(integer);
                         mDlg.dismiss();
                         if (integer == 0) {
-                            PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString(u.getUsername(), nik.getText().toString()).commit();
+                            mIMUSers.remove(info.position);
                             BaseAdapter ba = (BaseAdapter) getListAdapter();
                             ba.notifyDataSetChanged();
                         } else {
-                            Toast.makeText(getActivity(), "昵称不能为空", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getActivity(), "删除群组失败", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }.execute();
             }
-        }).setNegativeButton("取消", null).show();
+        }
         return true;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        menu.clear();
+        inflater.inflate(R.menu.contact_list_add, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_create_group) {
+            List<User> users = new ArrayList<User>();
+            if (mIMUSers == null || mIMUSers.isEmpty()) {
+                Toast.makeText(getActivity(), "您没有好友，请添加好友后再建群组", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+            for (EMContact c : mIMUSers) {
+                if (c instanceof User) {
+                    users.add((User) c);
+                }
+            }
+            if (users.isEmpty()) {
+                Toast.makeText(getActivity(), "您没有好友，请添加好友后再建群组", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+
+            final String[] items = new String[users.size()];
+            for (int i = 0; i < items.length; i++) {
+                User c = users.get(i);
+                String nik = c.getNick();
+                if (TextUtils.isEmpty(nik)) {
+                    nik = c.getUsername();
+                }
+                items[i] = nik;
+            }
+            final boolean[] checkedItems = new boolean[items.length];
+            new AlertDialog.Builder(getActivity()).setMultiChoiceItems(items, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                    checkedItems[which] = isChecked;
+                }
+            }).setTitle("选择要添加到群组的联系人").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    final EditText nik = new EditText(getActivity());
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT);
+                    nik.setLayoutParams(lp);
+
+                    new AlertDialog.Builder(getActivity()).setTitle("请输入群组名称").setView(nik).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new AsyncTask<Void, Integer, Integer>() {
+                                public EMGroup mGroup;
+
+                                @Override
+                                protected void onPreExecute() {
+                                    super.onPreExecute();
+                                    mDlg.show();
+                                }
+
+                                @Override
+                                protected Integer doInBackground(Void... params) {
+                                    int count = 0;
+                                    for (int i = 0; i < checkedItems.length; i++) {
+                                        if (checkedItems[i]) count++;
+                                    }
+                                    String[] users = new String[count];
+                                    count = 0;
+                                    for (int i = 0; i < checkedItems.length; i++) {
+                                        if (checkedItems[i]) users[count++] = items[i];
+                                    }
+                                    String nike = nik.getText().toString();
+                                    try {
+                                        mGroup = EMGroupManager.getInstance().createPrivateGroup(nike, nike, users);
+                                    } catch (EaseMobException e) {
+                                        e.printStackTrace();
+                                        return -1;
+                                    }
+                                    return 0;
+                                }
+
+                                @Override
+                                protected void onPostExecute(Integer integer) {
+                                    super.onPostExecute(integer);
+                                    mDlg.dismiss();
+                                    if (integer == 0) {
+                                        mIMUSers.add(0, mGroup);
+                                        BaseAdapter ba = (BaseAdapter) getListAdapter();
+                                        ba.notifyDataSetChanged();
+                                    } else {
+                                        Toast.makeText(getActivity(), "创建群组失败", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }.execute();
+                        }
+                    }).setNegativeButton("取消", null).show();
+                }
+            }).setNegativeButton("取消", null).show();
+            return true;
+        }
+        ;
+        return super.onOptionsItemSelected(item);
+    }
 
     /**
      * 联系人变化listener

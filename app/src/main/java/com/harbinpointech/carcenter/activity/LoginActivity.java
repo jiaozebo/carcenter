@@ -88,13 +88,18 @@ public class LoginActivity extends BaseActivity {
      * @param view
      */
     public void login(View view) {
+        usernameEditText.setError(null);
         if (!CommonUtils.isNetWorkConnected(this)) {
             Toast.makeText(this, R.string.network_isnot_available, Toast.LENGTH_SHORT).show();
             return;
         }
         final String username = usernameEditText.getText().toString();
         final String password = passwordEditText.getText().toString();
-        if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(username)) {
+            usernameEditText.setError("请输入用户名");
+            return;
+        }
+        {
 
             AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
                 public ProgressDialog mProgress;
@@ -135,8 +140,8 @@ public class LoginActivity extends BaseActivity {
                         // 如果用户名密码都有，直接进入主页面
                         mProgress.dismiss();
                         Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                        i.putExtra("username",username);
-                        i.putExtra("password",password);
+                        i.putExtra("username", username);
+                        i.putExtra("password", password);
                         startActivity(i);
                         finish();
                         return;
@@ -146,8 +151,6 @@ public class LoginActivity extends BaseActivity {
                     }
                 }
             }.execute();
-
-
         }
     }
 

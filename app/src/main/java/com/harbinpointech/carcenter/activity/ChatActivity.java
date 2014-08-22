@@ -370,6 +370,7 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
             // 群聊
             toChatUsername = getIntent().getStringExtra("groupId");
             group = EMGroupManager.getInstance().getGroup(toChatUsername);
+            toChatUsername = group.getGroupName();
         }
         String title = getIntent().getStringExtra("nick");
         if (TextUtils.isEmpty(title)) {
@@ -1000,7 +1001,7 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
      * @param view
      */
     public void toGroupDetails(View view) {
-        startActivityForResult((new Intent(this, GroupDetailsActivity.class).putExtra("groupId", toChatUsername)),
+        startActivityForResult((new Intent(this, GroupDetailsActivity.class).putExtra("groupId", getIntent().getStringExtra("groupId"))),
                 REQUEST_CODE_GROUP_DETAIL);
     }
 
