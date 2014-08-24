@@ -30,7 +30,8 @@
                 android:layout_height="32dip"
                 android:layout_marginLeft="6dp"
                 android:background="@drawable/type_select_btn"
-                android:onClick="more" />
+                android:onClick="more"
+                android:visibility="gone"/>
 
             <LinearLayout
                 android:id="@+id/btn_press_to_speak"
@@ -106,7 +107,7 @@
                 android:layout_marginRight="6dp"
                 android:background="@drawable/chatting_setmode_voice_btn"
                 android:onClick="setModeVoice"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/btn_set_mode_keyboard"
@@ -126,8 +127,7 @@
                 android:onClick="onClick"
                 android:text="@string/button_send"
                 android:textColor="#fff"
-                android:textSize="16sp"
-                android:visibility="gone" />
+                android:textSize="16sp"/>
         </LinearLayout>
 
         <LinearLayout
@@ -135,8 +135,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#EFEFF4"
-            android:orientation="vertical"
-            android:visibility="gone" >
+            android:orientation="vertical" >
 
             <!-- 表情图片 -->
 
@@ -144,8 +143,7 @@
                 android:id="@+id/ll_face_container"
                 android:layout_width="match_parent"
                 android:layout_height="150dp"
-                android:orientation="vertical"
-                android:visibility="gone" >
+                android:orientation="vertical">
 
                 <android.support.v4.view.ViewPager
                     android:id="@+id/vPager"
@@ -160,7 +158,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone" >
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -234,7 +232,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:orientation="vertical" >
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
                         <RelativeLayout
                             android:layout_width="64dp"
@@ -302,7 +301,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:orientation="vertical" >
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
                         <RelativeLayout
                             android:layout_width="64dp"

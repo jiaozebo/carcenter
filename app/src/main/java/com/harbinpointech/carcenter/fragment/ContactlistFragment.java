@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
@@ -81,6 +82,7 @@ public class ContactlistFragment extends ListFragment {
     private List<EMContact> mIMUSers;
     private UserDao mUserDao;
     private ProgressDialog mDlg;
+    private SharedPreferences mPref;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -103,12 +105,13 @@ public class ContactlistFragment extends ListFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         super.onActivityCreated(savedInstanceState);
-
+        mPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
         mDlg = new ProgressDialog(getActivity());
         mDlg.setMessage("请稍等...");
         mDlg.setCancelable(false);
         mUserDao = new UserDao(getActivity());
+//        mGroupDao = new
         registerForContextMenu(getListView());
         final String username = getActivity().getIntent().getStringExtra("username");
         final String password = getActivity().getIntent().getStringExtra("password");
@@ -163,27 +166,40 @@ public class ContactlistFragment extends ListFragment {
                         return -1;
                     }
                     try {
-                        EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
-                        List<String> members = group.getMembers();//获取群成员
-                        Iterator<String> it = members.iterator();
-                        while (it.hasNext()) {
-                            String mem = it.next();
-                            EMContactManager.getInstance().addContact(mem, "i'm in vehicle group..");
+                        boolean defaultGroupAdded = false;
+                        List<EMGroup> groups = EMGroupManager.getInstance().getAllGroups();
+                        if (groups == null || groups.isEmpty()) {
+                            groups = EMGroupManager.getInstance().getGroupsFromServer();
                         }
-                        EMGroupManager.getInstance().joinGroup("140792997963939");
-
-
-                        EMGroupManager.getInstance().getGroupsFromServer();
+                        for (EMGroup g : groups) {
+                            if ("140792997963939".equals(g.getGroupId())) {
+                                defaultGroupAdded = true;
+                                break;
+                            }
+                        }
+                        if (!defaultGroupAdded) {
+                            EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
+                            List<String> members = group.getMembers();//获取群成员
+                            Iterator<String> it = members.iterator();
+                            while (it.hasNext()) {
+                                String mem = it.next();
+                                EMContactManager.getInstance().addContact(mem, "i'm in vehicle group..");
+                            }
+                            EMGroupManager.getInstance().joinGroup("140792997963939");
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
                     List<String> usernames = EMChatManager.getInstance().getContactUserNames();
+                    List<User> us = new ArrayList<User>();
                     for (String name : usernames) {
                         User u = new User(name);
-                        u.setNick(PreferenceManager.getDefaultSharedPreferences(getActivity()).getString(name, name));
+                        u.setNick(mPref.getString(name, name));
                         mIMUSers.add(u);
+                        us.add(u);
                     }
+                    mUserDao.saveContactList(us);
 
 //                    Map<String, User> userlist = new HashMap<String, User>();
 //                    for (String username : usernames) {
@@ -277,16 +293,18 @@ public class ContactlistFragment extends ListFragment {
             }
             text.setText(nik);
             text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
-            if (((User) c).getUnreadMsgCount() > 0) {
-                unread.setText(String.valueOf(((User) c).getUnreadMsgCount()));
+            int unreadMsgCount = ((User) c).getUnreadMsgCount();
+            if (unreadMsgCount > 0) {
+                unread.setText(unreadMsgCount>10 ? "*":String.valueOf(unreadMsgCount));
                 unread.setVisibility(View.VISIBLE);
             }
         } else {
             EMGroup g = (EMGroup) c;
             text.setText(g.getGroupName());
             text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.group_icon, 0, 0, 0);
-            if (!TextUtils.isEmpty(g.getDescription())) {
-                unread.setText("*");
+            Integer unreadMsgCount = mGroup2UnreadMessageCount.get(g);
+            if (unreadMsgCount != null && unreadMsgCount > 0){
+                unread.setText(unreadMsgCount>10 ? "*":String.valueOf(unreadMsgCount));
                 unread.setVisibility(View.VISIBLE);
             }
         }
@@ -324,6 +342,8 @@ public class ContactlistFragment extends ListFragment {
         }
     }
 
+    Map<EMGroup, Integer> mGroup2UnreadMessageCount = new HashMap<EMGroup, Integer>();
+
     public void updateUnreadLable(EMMessage message) {
         String userName = message.getFrom();
         EMMessage.ChatType ct = message.getChatType();
@@ -346,9 +366,13 @@ public class ContactlistFragment extends ListFragment {
             EMContact c = adapter.getItem(0);
             if (c instanceof EMGroup) {
                 EMGroup g = (EMGroup) c;
-                if (g.getMembers().contains(userName)) {
-                    g.setDescription(userName);
+                Integer count = mGroup2UnreadMessageCount.get(g);
+                if (count == null || count == 0) {
+                    count = 1;
+                } else {
+                    count++;
                 }
+                mGroup2UnreadMessageCount.put(g, count);
             }
         }
         adapter.notifyDataSetChanged();

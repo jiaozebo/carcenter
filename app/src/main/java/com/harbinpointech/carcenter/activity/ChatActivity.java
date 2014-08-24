@@ -330,13 +330,14 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (!TextUtils.isEmpty(s)) {
                     buttonSetModeVoice.setVisibility(View.GONE);
-                    buttonSend.setVisibility(View.VISIBLE);
+                    buttonSend.setEnabled(true);
                 } else {
-                    if (buttonSetModeKeyboard.getVisibility() != View.VISIBLE) {
-                        buttonSetModeVoice.setVisibility(View.VISIBLE);
-                        buttonSend.setVisibility(View.GONE);
-                    }
+//                    if (buttonSetModeKeyboard.getVisibility() != View.VISIBLE) {
+//                        buttonSetModeVoice.setVisibility(View.VISIBLE);
+//                        buttonSend.setVisibility(View.GONE);
+//                    }
 
+                    buttonSend.setEnabled(false);
                 }
             }
 

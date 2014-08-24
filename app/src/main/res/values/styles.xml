@@ -77,6 +77,14 @@
         <item name="android:windowAnimationStyle">@style/AnimFade2</item>
         <item name="android:actionBarStyle">@style/Widget.App.ActionBar</item>
     </style>
+
+
+
+    <style name="FloatActionBar" parent="horizontal_slide">
+        <item name="android:windowActionBarOverlay">true</item>
+    </style>
+
+
     <style name="Widget.App.ActionBar" parent="Widget.AppCompat.ActionBar.Solid">
         <item name="android:indeterminateProgressStyle">@style/IndeterminateProgress</item>
     </style>

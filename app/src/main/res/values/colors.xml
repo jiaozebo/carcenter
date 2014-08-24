@@ -31,4 +31,41 @@
      <color name="gray_normal">#666667</color>
      <color name="grid_state_pressed">#1Affffff</color>
     <color name="grid_state_focused">#80000000</color>
+
+    <color name="black_overlay">#66000000</color>
+    <color name="holo_red_dark">#ffcc0000</color>
+    <color name="holo_red_light">#ffFF4444</color>
+    <color name="holo_green_light">#ff99CC00</color>
+    <color name="holo_green_dark">#ff669900</color>
+    <color name="holo_grey_dark">#ffDEDEDE</color>
+    <color name="holo_grey_light">#ffDADADA</color>
+    <color name="add_camera_dlg_bg">#ffF6F5F7</color>
+    <color name="list_item_pressed">#ffBDBDBD</color>
+    <color name="viewfinder_frame">#ff000000</color>
+    <color name="result_view">#b0000000</color>
+    <color name="contents_text">#ff000000</color>
+    <color name="encode_view">#ffffffff</color>
+    <color name="possible_result_points">#c0ffbd21</color>
+    <!-- Android standard ICS color -->
+    <color name="result_minor_text">#ffc0c0c0</color>
+    <color name="result_points">#c099cc00</color>
+    <!-- Android standard ICS color -->
+    <color name="result_text">#ffffffff</color>
+    <color name="status_text">#ffffffff</color>
+    <color name="transparent">#00000000</color>
+    <color name="viewfinder_laser">#ffcc0000</color>
+    <!-- Android standard ICS color -->
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="my_blue">#2da5da</color>
+    <color name="dark_blue_">#990099CC</color>
+    <color name="light_blue_">#9933B5E5</color>
+    <color name="my_perple">#9933CC</color>
+    <color name="my_green">#99CC00</color>
+    <color name="my_dark_green">#669900</color>
+    <color name="my_yellow">#FFBB33</color>
+    <color name="my_red">#FF4444</color>
+    <color name="my_drawer_list_item_bg">#edeff0</color>
+    <color name="my_drawer_list_item_select">#dfe3ea</color>
+    <color name="half_transparent_blue">#662da5da</color>
+    <color name="main_tablet_land_action_bar_bg">#33000000</color>
 </resources>

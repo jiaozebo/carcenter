@@ -3,13 +3,17 @@ package com.harbinpointech.carcenter.fragment;
 
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.zxing.client.android.CaptureActivity;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.activity.ScanActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -17,6 +21,8 @@ import com.harbinpointech.carcenter.R;
  */
 public class FixCarFragment extends Fragment {
 
+
+    private static final int REQUEST_SCAN_VEHICLE = 0x1000;
 
     public FixCarFragment() {
         // Required empty public constructor
@@ -29,6 +35,7 @@ public class FixCarFragment extends Fragment {
             Activity activity = getActivity();
             if (activity != null) {
                 activity.setTitle("维修");
+                startActivityForResult(new Intent(getActivity(), ScanActivity.class), REQUEST_SCAN_VEHICLE);
             }
         }
     }
@@ -41,4 +48,10 @@ public class FixCarFragment extends Fragment {
     }
 
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        
+
+    }
 }

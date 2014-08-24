@@ -124,7 +124,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            return PlaceholderFragment.newInstance(position);
         }
 
         @Override
@@ -212,6 +212,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                         List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
                             if (mContent != null) {
+                                mContent = mContent.getJSONObject("d");
                                 items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
                                 items.add(new Pair<String, String>("车牌号：", mContent.getString("CarName")));
                                 items.add(new Pair<String, String>("车辆管理员：", mContent.getString("Manager")));
@@ -240,6 +241,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                         List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
                             if (mContent != null) {
+                                mContent = mContent.getJSONObject("d");
                                 items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
                                 items.add(new Pair<String, String>("车牌号：", mContent.getString("CarName")));
                                 items.add(new Pair<String, String>("车辆管理员：", mContent.getString("Manager")));

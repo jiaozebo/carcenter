@@ -238,6 +238,11 @@
             android:name=".activity.VehicleInfoActivity"
             android:label="@string/title_activity_vehicle_info" >
         </activity>
+        <activity
+            android:name=".activity.ScanActivity"
+            android:theme="@style/FloatActionBar"
+            android:label="@string/title_activity_scan" >
+        </activity>
     </application>
 
 </manifest>
