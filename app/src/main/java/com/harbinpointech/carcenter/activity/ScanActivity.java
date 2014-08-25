@@ -1,9 +1,13 @@
 package com.harbinpointech.carcenter.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.zxing.client.android.CaptureActivity;
+import com.harbinpointech.carcenter.R;
 
 public class ScanActivity extends CaptureActivity {
 
@@ -12,6 +16,18 @@ public class ScanActivity extends CaptureActivity {
         super.onCreate(savedInstanceState);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        findViewById(R.id.capture_confirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent();
+                TextView formatTextView = (TextView) findViewById(R.id.contents_supplement_text_view);
+                String text = formatTextView.getText().toString();
+                i.putExtra("text", text);
+                setResult(RESULT_OK, i);
+                finish();
+            }
+        });
     }
 
     @Override

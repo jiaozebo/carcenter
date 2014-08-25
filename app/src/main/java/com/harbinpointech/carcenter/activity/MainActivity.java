@@ -34,10 +34,12 @@ public class MainActivity extends ActionBarActivity {
     private boolean useDemo = false;
     private NewMessageBroadcastReceiver mMsgReceiver;
     private HashMap<Integer, Fragment> mFragmentsMap = new HashMap<Integer, Fragment>();
+    private double[] mLastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mLastLocation = new double[2];
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
 
@@ -77,6 +79,8 @@ public class MainActivity extends ActionBarActivity {
         EMChatManager.getInstance().activityResumed();
     }
 
+    private static final int REQUEST_SCAN_VEHICLE = 0x1000;
+
     private void initFragmentWithId(int oldId) {
         Fragment frag = null;
         FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
@@ -92,15 +96,9 @@ public class MainActivity extends ActionBarActivity {
      */
     public void onTabClicked(View view) {
         switch (view.getId()) {
-            case R.id.btn_conversation:
-
-                break;
-            case R.id.btn_address_list:
-
-                break;
-            case R.id.btn_setting:
-
-
+            case R.id.main_btn_fix_car:
+                startActivityForResult(new Intent(this, ScanActivity.class), REQUEST_SCAN_VEHICLE);
+                return;
         }
         if (mCurrentSelectId != view.getId()) {
             findViewById(mCurrentSelectId).setSelected(false);
@@ -132,12 +130,40 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_SETTING && resultCode == RESULT_QUIT){
+        if (requestCode == REQUEST_SETTING && resultCode == RESULT_QUIT) {
             DemoApplication.getInstance().logout();
             WebHelper.logout();
             finish();
+        }else if (requestCode == REQUEST_SCAN_VEHICLE && resultCode == RESULT_OK){
+            int old = mCurrentSelectId;
+            findViewById(mCurrentSelectId).setSelected(false);
+            mCurrentSelectId = R.id.main_btn_fix_car;
+            View view = findViewById(mCurrentSelectId);
+            view.setSelected(true);
+            initFragmentWithId(old);
+
+            final FixCarFragment frag = (FixCarFragment) mFragmentsMap.get(mCurrentSelectId);
+            final String text = data.getStringExtra("text");
+            view.post(new Runnable() {
+                @Override
+                public void run() {
+                    double latitude, longitude;
+                    synchronized (MainActivity.this) {
+                        latitude = mLastLocation[0];
+                        longitude = mLastLocation[1];
+                    }
+                    frag.startSignin(text, latitude, longitude);
+                }
+            });
+        }
+    }
+
+    public void setLastLocation(double latitude, double longitude) {
+        synchronized (this) {
+            mLastLocation[0] = latitude;
+            mLastLocation[1] = longitude;
         }
     }
 

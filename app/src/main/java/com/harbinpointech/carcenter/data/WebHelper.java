@@ -28,11 +28,11 @@ public class WebHelper {
     public static final String URL = "http://182.254.136.208:81/WCF/Service.svc/";
     //    public static final String URL = "http://192.168.1.101:81/service.svc/";
 
-    public static boolean hasLogined(){
+    public static boolean hasLogined() {
         return !TextUtils.isEmpty(JSESSIONID);
     }
 
-    public static void logout(){
+    public static void logout() {
         JSESSIONID = null;
     }
 
@@ -67,12 +67,13 @@ public class WebHelper {
 
     /**
      * public ServiceBaseInfo MobileGetCarBaseInfos(string carName, bool isGetImg)
+     *
      * @param params
      * @param carName   车牌号
      * @param getCarImg 是否获取图片
      * @return
      */
-    public static int getCarBaseInfos(JSONObject[]params, String carName, boolean getCarImg) throws JSONException, IOException {
+    public static int getCarBaseInfos(JSONObject[] params, String carName, boolean getCarImg) throws JSONException, IOException {
         params[0] = new JSONObject(String.format("{\"%s\":\"%s\",\"%s\":\"%s\"}", "carName", carName, "isGetImg", getCarImg));
         int result = doPost(URL + "MobileGetCarBaseInfos", params);
         if (result == 200) {
@@ -84,17 +85,29 @@ public class WebHelper {
 
     /**
      * public ServiceDevice[] MobileGetCarDeviceInfo(string CarName)
+     *
      * @param params
-     * @param carName   车牌号
+     * @param carName 车牌号
      * @return
      * @throws JSONException
      * @throws IOException
      */
-    public static int getCarPluginInfos(JSONObject[]params, String carName) throws JSONException, IOException {
+    public static int getCarPluginInfos(JSONObject[] params, String carName) throws JSONException, IOException {
         params[0] = new JSONObject(String.format("{\"%s\":\"%s\"}", "carName", carName));
         int result = doPost(URL + "MobileGetCarDeviceInfo", params);
         if (result == 200) {
             return 0;
+        } else {
+            return result;
+        }
+    }
+
+//
+    public static int singin(String carName, double latitude, double longitude) throws JSONException, IOException {
+        JSONObject []params= new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", carName,"lat",latitude,"lng", longitude))};
+        int result = doPost(URL + "Signin", params);
+        if (result == 200) {
+            return params[0].getBoolean("d") ? 0 : 1;
         } else {
             return result;
         }
@@ -115,7 +128,7 @@ public class WebHelper {
             request.setEntity(entity);
         } else {
         }
-        Log.w("WEB_HELPER_request",url + ", " + json[0]);
+        Log.w("WEB_HELPER_request", url + ", " + json[0]);
         if (!TextUtils.isEmpty(JSESSIONID)) {
             request.setHeader("Cookie", "ASP.NET_SessionId=" + JSESSIONID);
         }
@@ -132,20 +145,27 @@ public class WebHelper {
                 return -1;
             }
 
+            if (!hasLogined()) {
              /* 获取cookieStore */
-            CookieStore cookieStore = httpClient.getCookieStore();
-            List<Cookie> cookies = cookieStore.getCookies();
-            for (int i = 0; i < cookies.size(); i++) {
-                if ("ASP.NET_SessionId".equals(cookies.get(i).getName())) {
-                    JSESSIONID = cookies.get(i).getValue();
-                    break;
+                CookieStore cookieStore = httpClient.getCookieStore();
+                List<Cookie> cookies = cookieStore.getCookies();
+                for (int i = 0; i < cookies.size(); i++) {
+                    if ("ASP.NET_SessionId".equals(cookies.get(i).getName())) {
+                        JSESSIONID = cookies.get(i).getValue();
+                        break;
+                    }
                 }
             }
-
             String jsonStr = EntityUtils.toString(response.getEntity());
             json[0] = new JSONObject(jsonStr);
-            Log.w("WEB_HELPER_response",json[0].toString());
+            Log.w("WEB_HELPER_response", json[0].toString());
         }
         return sl.getStatusCode();
+    }
+
+    public static void AddRepaireRecord() {
+    }
+
+    public static void mobileGetRepaireRecords2() {
     }
 }

@@ -57,7 +57,7 @@ import java.util.Set;
  * thread. It draws a viewfinder to help the user place the barcode correctly,
  * shows feedback as the image processing is happening, and then overlays the
  * results when a scan is successful.
- * 
+ *
  * @author dswitkin@google.com (Daniel Switkin)
  * @author Sean Owen
  */
@@ -332,7 +332,7 @@ public class CaptureActivity extends ActionBarActivity implements SurfaceHolder.
 	/**
 	 * A valid barcode has been found, so give an indication of success and show
 	 * the results.
-	 * 
+	 *
 	 * @param rawResult
 	 *            The contents of the barcode.
 	 * @param scaleFactor
@@ -358,7 +358,7 @@ public class CaptureActivity extends ActionBarActivity implements SurfaceHolder.
 	/**
 	 * Superimpose a line for 1D or dots for 2D to highlight the key features of
 	 * the barcode.
-	 * 
+	 *
 	 * @param barcode
 	 *            A bitmap of the captured image.
 	 * @param scaleFactor

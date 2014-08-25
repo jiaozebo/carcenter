@@ -24,6 +24,7 @@ import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.model.LatLng;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.activity.VehicleInfoActivity;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
@@ -201,6 +202,9 @@ public class MapFragment extends SupportMapFragment {
                         .longitude(location.getLongitude()).build();
                 // 设置定位数据
                 map.setMyLocationData(locData);
+
+                MainActivity main = (MainActivity) activity;
+                main.setLastLocation(location.getLatitude(), location.getLongitude());
             }
         };
         mLocationClient.registerLocationListener(mListener);
