@@ -602,6 +602,13 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
                 adapter.refresh();
                 setResult(RESULT_OK);
             } else if (requestCode == REQUEST_CODE_GROUP_DETAIL) {
+                if (data != null) {
+                    if (data.getBooleanExtra(GroupDetailsActivity.EXTRA_EXIT_GROUP, false)) {
+                        setResult(RESULT_OK, new Intent(data));
+                        finish();
+                        return;
+                    }
+                }
                 EMChatManager.getInstance().getConversation(toChatUsername);
                 adapter.refresh();
             }
@@ -1426,11 +1433,10 @@ public class ChatActivity extends ActionBarActivity implements OnClickListener {
             runOnUiThread(new Runnable() {
                 public void run() {
                     Toast.makeText(ChatActivity.this, "当前群聊已被群创建者解散", Toast.LENGTH_SHORT).show();
-                    if (GroupDetailsActivity.instance != null)
-                        GroupDetailsActivity.instance.finish();
-                    if (toChatUsername.equals(groupId)) {
-                        finish();
-                    }
+                    Intent i = new Intent();
+                    i.putExtra(GroupDetailsActivity.EXTRA_EXIT_GROUP, true);
+                    setResult(RESULT_CODE_OPEN,i);
+                    finish();
                 }
             });
         }

@@ -51,6 +51,7 @@ public class GroupDetailsActivity extends ActionBarActivity {
     private static final int REQUEST_CODE_EXIT = 1;
     private static final int REQUEST_CODE_EXIT_DELETE = 2;
     private static final int REQUEST_CODE_CLEAR_ALL_HISTORY = 3;
+    public static final String EXTRA_EXIT_GROUP = "extra_exit_group";
 
     private ExpandGridView userGridview;
     private String groupId;
@@ -68,46 +69,6 @@ public class GroupDetailsActivity extends ActionBarActivity {
     //清空所有聊天记录
     private RelativeLayout clearAllHistory;
 
-    /**
-     * <RelativeLayout
-     * android:layout_width="match_parent"
-     * android:layout_height="@dimen/height_top_bar"
-     * android:background="@color/common_top_bar_blue"
-     * android:gravity="center_vertical" >
-     * <p/>
-     * <LinearLayout
-     * android:layout_width="45dp"
-     * android:layout_height="match_parent"
-     * android:background="@drawable/common_tab_bg"
-     * android:onClick="back" >
-     * <p/>
-     * <ImageView
-     * android:layout_width="wrap_content"
-     * android:layout_height="wrap_content"
-     * android:layout_gravity="center_vertical"
-     * android:layout_marginLeft="9dp"
-     * android:scaleType="centerInside"
-     * android:src="@drawable/mm_title_back" />
-     * </LinearLayout>
-     * <p/>
-     * <TextView
-     * android:id="@+id/group_name"
-     * android:layout_width="wrap_content"
-     * android:layout_height="wrap_content"
-     * android:layout_centerInParent="true"
-     * android:textColor="#ffffff"
-     * android:textSize="20sp" />
-     * <p/>
-     * <ProgressBar
-     * android:id="@+id/progressBar"
-     * android:layout_width="26dp"
-     * android:layout_height="26dp"
-     * android:layout_centerVertical="true"
-     * android:layout_alignParentRight="true"
-     * android:layout_marginRight="7dp"
-     * />
-     * </RelativeLayout>
-     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -276,9 +237,10 @@ public class GroupDetailsActivity extends ActionBarActivity {
                     runOnUiThread(new Runnable() {
                         public void run() {
                             progressDialog.dismiss();
-                            setResult(RESULT_OK);
+                            Intent i = new Intent();
+                            i.putExtra(EXTRA_EXIT_GROUP, true);
+                            setResult(RESULT_OK, i);
                             finish();
-                            ChatActivity.activityInstance.finish();
                         }
                     });
                 } catch (final Exception e) {
@@ -306,9 +268,10 @@ public class GroupDetailsActivity extends ActionBarActivity {
                     runOnUiThread(new Runnable() {
                         public void run() {
                             progressDialog.dismiss();
-                            setResult(RESULT_OK);
+                            Intent i = new Intent();
+                            i.putExtra(EXTRA_EXIT_GROUP, true);
+                            setResult(RESULT_OK, i);
                             finish();
-                            ChatActivity.activityInstance.finish();
                         }
                     });
                 } catch (final Exception e) {

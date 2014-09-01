@@ -184,7 +184,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                     try {
                         int result = 0;
                         if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
-                            result = WebHelper.getCarBaseInfos(param, getActivity().getIntent().getStringExtra(EXTRA_CARNAME), true);
+                            result = WebHelper.getCarBaseInfos(param, getActivity().getIntent().getStringExtra(EXTRA_CARNAME), false);
                         } else {
                             result = WebHelper.getCarPluginInfos(param, getActivity().getIntent().getStringExtra(EXTRA_CARNAME));
                         }

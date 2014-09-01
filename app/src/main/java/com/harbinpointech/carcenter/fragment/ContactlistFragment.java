@@ -59,6 +59,7 @@ import com.harbinpointech.carcenter.R;
 import android.app.AlertDialog;
 
 import com.harbinpointech.carcenter.activity.ChatActivity;
+import com.harbinpointech.carcenter.activity.GroupDetailsActivity;
 import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.db.UserDao;
 import com.harbinpointech.carcenter.domain.InviteMessage;
@@ -295,7 +296,7 @@ public class ContactlistFragment extends ListFragment {
             text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
             int unreadMsgCount = ((User) c).getUnreadMsgCount();
             if (unreadMsgCount > 0) {
-                unread.setText(unreadMsgCount>10 ? "*":String.valueOf(unreadMsgCount));
+                unread.setText(unreadMsgCount > 10 ? "*" : String.valueOf(unreadMsgCount));
                 unread.setVisibility(View.VISIBLE);
             }
         } else {
@@ -303,8 +304,8 @@ public class ContactlistFragment extends ListFragment {
             text.setText(g.getGroupName());
             text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.group_icon, 0, 0, 0);
             Integer unreadMsgCount = mGroup2UnreadMessageCount.get(g);
-            if (unreadMsgCount != null && unreadMsgCount > 0){
-                unread.setText(unreadMsgCount>10 ? "*":String.valueOf(unreadMsgCount));
+            if (unreadMsgCount != null && unreadMsgCount > 0) {
+                unread.setText(unreadMsgCount > 10 ? "*" : String.valueOf(unreadMsgCount));
                 unread.setVisibility(View.VISIBLE);
             }
         }
@@ -336,6 +337,94 @@ public class ContactlistFragment extends ListFragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1000) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (data != null) {
+                    if (data.getBooleanExtra(GroupDetailsActivity.EXTRA_EXIT_GROUP, false)) {
+                        new AsyncTask<Void, Integer, Integer>() {
+
+                            ProgressDialog mProgress;
+
+                            @Override
+                            protected Integer doInBackground(Void... params) {
+
+                                List<String> usernames = null;
+                                try {
+                                    usernames = EMChatManager.getInstance().getContactUserNames();
+                                    List<User> us = new ArrayList<User>();
+                                    for (String name : usernames) {
+                                        User u = new User(name);
+                                        u.setNick(mPref.getString(name, name));
+                                        mIMUSers.add(u);
+                                        us.add(u);
+                                    }
+                                    mUserDao.saveContactList(us);
+
+//                    Map<String, User> userlist = new HashMap<String, User>();
+//                    for (String username : usernames) {
+//                        User user = new User();
+//                        user.setUsername(username);
+//                        setUserHearder(username, user);
+//                        userlist.put(username, user);
+//                    }
+//                    // 添加user"申请与通知"
+//                    User newFriends = new User();
+//                    newFriends.setUsername(Constant.NEW_FRIENDS_USERNAME);
+//                    newFriends.setNick("申请与通知");
+//                    newFriends.setHeader("");
+//                    userlist.put(Constant.NEW_FRIENDS_USERNAME, newFriends);
+//                    // 添加"群聊"
+//                    User groupUser = new User();
+//                    groupUser.setUsername(Constant.GROUP_USERNAME);
+//                    groupUser.setNick("群聊");
+//                    groupUser.setHeader("");
+//                    userlist.put(Constant.GROUP_USERNAME, groupUser);
+//
+//                    // 存入内存
+//                    DemoApplication.getInstance().setContactList(userlist);
+//                    // 存入db
+//                    UserDao dao = new UserDao(getActivity());
+//                    List<User> users = new ArrayList<User>(userlist.values());
+//                    dao.saveContactList(users);
+
+                                    // 获取群聊列表,sdk会把群组存入到EMGroupManager和db中
+                                    try {
+//                         EMGroupManager.getInstance().getGroupsFromServer();
+                                        List<EMGroup> groups = EMGroupManager.getInstance().getAllGroups();
+                                        mIMUSers.addAll(0, groups);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        EMGroup group = new EMGroup("140792997963939");
+                                        group.setGroupName("群组");
+                                        group.setNick("群组");
+                                        mIMUSers.add(0, group);
+                                    }
+                                } catch (EaseMobException e) {
+                                    e.printStackTrace();
+                                }
+
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPreExecute() {
+                                super.onPreExecute();
+                                mProgress = new ProgressDialog(getActivity());
+                                mProgress.setCancelable(false);
+                                mProgress.setMessage("请稍候");
+                                mProgress.show();
+                            }
+
+                            @Override
+                            protected void onPostExecute(Integer integer) {
+                                super.onPostExecute(integer);
+                                mProgress.dismiss();
+                                BaseAdapter adapter = (BaseAdapter) getListAdapter();
+                                adapter.notifyDataSetChanged();
+                            }
+                        }.execute();
+                    }
+                }
+            }
             MainActivity activity = (MainActivity) getActivity();
             activity.updateUnreadLabel(null);
 

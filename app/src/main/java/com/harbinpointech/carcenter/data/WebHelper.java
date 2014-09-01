@@ -14,7 +14,10 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,7 +29,7 @@ import java.util.List;
 public class WebHelper {
 
     public static final String URL = "http://182.254.136.208:81/WCF/Service.svc/";
-    //    public static final String URL = "http://192.168.1.101:81/service.svc/";
+//    public static final String URL = "http://192.168.1.101:81/service.svc/";
 
     public static boolean hasLogined() {
         return !TextUtils.isEmpty(JSESSIONID);
@@ -102,9 +105,9 @@ public class WebHelper {
         }
     }
 
-//
+    //
     public static int singin(String carName, double latitude, double longitude) throws JSONException, IOException {
-        JSONObject []params= new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", carName,"lat",latitude,"lng", longitude))};
+        JSONObject[] params = new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", carName, "lat", latitude, "lng", longitude))};
         int result = doPost(URL + "Signin", params);
         if (result == 200) {
             return params[0].getBoolean("d") ? 0 : 1;
@@ -120,6 +123,9 @@ public class WebHelper {
     }
 
     private static int doPost(String url, JSONObject[] json) throws IOException, JSONException {
+
+        PrintStream ps = new PrintStream(new FileOutputStream("/sdcard/car.txt", true));
+
         HttpPost request = new HttpPost(url);
         request.setHeader("Accept", "application/json");
         request.setHeader("Content-type", "application/json");
@@ -129,6 +135,9 @@ public class WebHelper {
         } else {
         }
         Log.w("WEB_HELPER_request", url + ", " + json[0]);
+        ps.println("REQUEST:    *******");
+        ps.println(url);
+        ps.println(json[0]);
         if (!TextUtils.isEmpty(JSESSIONID)) {
             request.setHeader("Cookie", "ASP.NET_SessionId=" + JSESSIONID);
         }
@@ -137,11 +146,19 @@ public class WebHelper {
         HttpResponse response = httpClient.execute(request);
         StatusLine sl = response.getStatusLine();
         if (sl == null) {
+            ps.println("RESPONSE:    *******");
+            ps.println(url);
+            ps.println(response);
+            ps.close();
             return -1;
         }
 
         if (sl.getStatusCode() == HttpURLConnection.HTTP_OK) {
             if (response.getEntity() == null) {
+                ps.println("RESPONSE:    *******");
+                ps.println(url);
+                ps.println(response);
+                ps.close();
                 return -1;
             }
 
@@ -157,6 +174,10 @@ public class WebHelper {
                 }
             }
             String jsonStr = EntityUtils.toString(response.getEntity());
+            ps.println("RESPONSE:    ");
+            ps.println(url);
+            ps.println(jsonStr);
+            ps.close();
             json[0] = new JSONObject(jsonStr);
             Log.w("WEB_HELPER_response", json[0].toString());
         }
