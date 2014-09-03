@@ -122,6 +122,20 @@ public class WebHelper {
         return md.digest();
     }
 
+
+    public static void gps2lnglat(double[] data) {
+        for (int i = 0; i < data.length; i++) {
+            double d = data[i];
+            d /= 100;
+            int d1 = (int) d;
+            double d2 = d - d1;
+            d2 *= 100;
+            d2 /= 60;
+            d = d1 + d2;
+            data[i] = d;
+        }
+    }
+
     private static int doPost(String url, JSONObject[] json) throws IOException, JSONException {
 
         PrintStream ps = new PrintStream(new FileOutputStream("/sdcard/car.txt", true));

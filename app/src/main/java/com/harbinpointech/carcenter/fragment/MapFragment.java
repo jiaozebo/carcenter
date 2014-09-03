@@ -133,7 +133,9 @@ public class MapFragment extends SupportMapFragment {
             for (int i = 0; i < js.length(); i++) {
                 JSONObject item = js.getJSONObject(i);
                 //定义Maker坐标点
-                LatLng point = new LatLng(item.getDouble("Lattitude"), item.getDouble("Longtitude"));
+                double []data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+                WebHelper.gps2lnglat(data);
+                LatLng point = new LatLng(data[0],data[1]);
 //构建Marker图标
                 BitmapDescriptor bitmap = BitmapDescriptorFactory
                         .fromResource(R.drawable.icon_marka);
