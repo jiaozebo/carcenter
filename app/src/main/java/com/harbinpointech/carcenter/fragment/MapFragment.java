@@ -22,6 +22,7 @@ import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
+import com.baidu.mapapi.map.TextOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.MainActivity;
@@ -74,6 +75,36 @@ public class MapFragment extends SupportMapFragment {
                     result = WebHelper.getCars(cars);
                     if (result == 0) {
                         mCarPos = cars[0];
+
+
+                        JSONArray js = mCarPos.getJSONArray("d");
+                        for (int i = 0; i < js.length(); i++) {
+                            JSONObject item = js.getJSONObject(i);
+                            //定义Maker坐标点
+                            double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+                            WebHelper.gps2lnglat(data);
+//                            Object []objData = new Object[]{data[0],data[1]};
+
+                            result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
+                            if (result == 0) {
+                                LatLng point = new LatLng(data[0], data[1]);
+//构建Marker图标
+                                BitmapDescriptor bitmap = BitmapDescriptorFactory
+                                        .fromResource(R.drawable.icon_marka);
+//构建MarkerOption，用于在地图上添加Marker
+                                Bundle extrInfo = new Bundle();
+                                extrInfo.putInt("index", i);
+                                OverlayOptions option = new MarkerOptions()
+                                        .position(point)
+                                        .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
+//在地图上添加Marker，并显示
+
+                                Marker m = (Marker) getBaiduMap().addOverlay(option);
+                                option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+
+                                getBaiduMap().addOverlay(option);
+                            }
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -96,7 +127,6 @@ public class MapFragment extends SupportMapFragment {
                 if (integer == 0) {
                     //
 
-                    addCars2Map();
                 }
             }
         }.execute();
@@ -127,32 +157,32 @@ public class MapFragment extends SupportMapFragment {
         super.onDestroy();
     }
 
-    private void addCars2Map() {
-        try {
-            JSONArray js = mCarPos.getJSONArray("d");
-            for (int i = 0; i < js.length(); i++) {
-                JSONObject item = js.getJSONObject(i);
-                //定义Maker坐标点
-                double []data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
-                WebHelper.gps2lnglat(data);
-                LatLng point = new LatLng(data[0],data[1]);
-//构建Marker图标
-                BitmapDescriptor bitmap = BitmapDescriptorFactory
-                        .fromResource(R.drawable.icon_marka);
-//构建MarkerOption，用于在地图上添加Marker
-                Bundle extrInfo = new Bundle();
-                extrInfo.putInt("index", i);
-                OverlayOptions option = new MarkerOptions()
-                        .position(point)
-                        .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
-//在地图上添加Marker，并显示
-                Marker m = (Marker) getBaiduMap().addOverlay(option);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            ;
-        }
-    }
+//    private void addCars2Map() {
+//        try {
+//            JSONArray js = mCarPos.getJSONArray("d");
+//            for (int i = 0; i < js.length(); i++) {
+//                JSONObject item = js.getJSONObject(i);
+//                //定义Maker坐标点
+//                double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+//                WebHelper.gps2lnglat(data);
+//                LatLng point = new LatLng(data[0], data[1]);
+////构建Marker图标
+//                BitmapDescriptor bitmap = BitmapDescriptorFactory
+//                        .fromResource(R.drawable.icon_marka);
+////构建MarkerOption，用于在地图上添加Marker
+//                Bundle extrInfo = new Bundle();
+//                extrInfo.putInt("index", i);
+//                OverlayOptions option = new MarkerOptions()
+//                        .position(point)
+//                        .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
+////在地图上添加Marker，并显示
+//                Marker m = (Marker) getBaiduMap().addOverlay(option);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            ;
+//        }
+//    }
 
     private void uninitLocation() {
         if (mLocationClient != null) {
@@ -183,7 +213,7 @@ public class MapFragment extends SupportMapFragment {
             public void onReceiveLocation(BDLocation location) {
                 String city = location.getCity();
                 ActionBarActivity activity = (ActionBarActivity) getActivity();
-                if (activity == null){
+                if (activity == null) {
                     return;
                 }
                 activity.getSupportActionBar().setSubtitle(String.format("%s:%s", "当前城市", city));

@@ -1,11 +1,13 @@
 package com.harbinpointech.carcenter.data;
 
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
@@ -17,7 +19,6 @@ import org.json.JSONObject;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -148,7 +149,7 @@ public class WebHelper {
             request.setEntity(entity);
         } else {
         }
-        Log.w("WEB_HELPER_request", url + ", " + json[0]);
+//        Log.w("WEB_HELPER_request", url + ", " + json[0]);
         ps.println("REQUEST:    *******");
         ps.println(url);
         ps.println(json[0]);
@@ -193,9 +194,69 @@ public class WebHelper {
             ps.println(jsonStr);
             ps.close();
             json[0] = new JSONObject(jsonStr);
-            Log.w("WEB_HELPER_response", json[0].toString());
+//            Log.w("WEB_HELPER_response", json[0].toString());
         }
         return sl.getStatusCode();
+    }
+
+    public static int fixPoint(String url, double[] data) throws IOException, JSONException {
+
+//        PrintStream ps = new PrintStream(new FileOutputStream("/sdcard/car.txt", true));
+
+        HttpGet request = new HttpGet(String.format("%s?%s=%s&%s=%s&%s=%s&%s=%s", url, "from", "0", "to", "4", "x", String.valueOf(data[1]), "y", String.valueOf(data[0])));
+//        request.setHeader("Accept", "application/json");
+//        request.setHeader("Content-type", "application/json");
+//        if (json[0] != null) {
+//            StringEntity entity = new StringEntity(json[0].toString());
+//            request.setEntity(entity);
+//        } else {
+//        }
+//        Log.w("WEB_HELPER_request", url + ", " + json[0]);
+//        ps.println("REQUEST:    *******");
+//        ps.println(url);
+//        ps.println(json[0]);
+//        if (!TextUtils.isEmpty(JSESSIONID)) {
+//            request.setHeader("Cookie", "ASP.NET_SessionId=" + JSESSIONID);
+//        }
+//        HttpParams p = request.getParams();
+//        p.setIntParameter("from", 0);
+//        p.setIntParameter("to", 4);
+//        p.setDoubleParameter("x",  data[0]);
+//        p.setDoubleParameter("y",data[1]);
+//        request.setParams(p);
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+
+        HttpResponse response = httpClient.execute(request);
+        StatusLine sl = response.getStatusLine();
+        if (sl == null) {
+            return -1;
+        }
+
+        if (sl.getStatusCode() == HttpURLConnection.HTTP_OK) {
+            if (response.getEntity() == null) {
+                return -1;
+            }
+            String jsonStr = EntityUtils.toString(response.getEntity());
+            JSONObject json = new JSONObject(jsonStr);
+            int result = json.getInt("error");
+            if (result == 0) {
+//                {"error":0,"x":"MTE4LjM2MjYyNzA1MjQ4","y":"MzguMTYwNzUwMjI5MTM3"}
+                double dx = data[1];
+                double dy = data[0];
+
+                String x = json.getString("x");
+                String y = json.getString("y");
+                x = new String(Base64.decode(x, 0));
+                data[1] = Double.parseDouble(x);
+
+                y = new String(Base64.decode(y, 0));
+                data[0] = Double.parseDouble(y);
+
+                Log.i(JSESSIONID,String.format("%.08f,%.08f->%.08f,%.08f",dx,dy, data[1],data[0]));
+            }
+            return result;
+        }
+        return -1;
     }
 
     public static void AddRepaireRecord() {

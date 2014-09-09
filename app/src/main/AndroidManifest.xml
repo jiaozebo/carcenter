@@ -241,7 +241,7 @@
         <activity
             android:name=".activity.ScanActivity"
             android:theme="@style/FloatActionBar"
-            android:label="@string/title_activity_scan" >
+            android:label="扫描二维码" >
         </activity>
     </application>
 
