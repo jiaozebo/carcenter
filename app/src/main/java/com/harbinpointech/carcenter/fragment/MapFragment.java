@@ -3,9 +3,13 @@ package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -16,6 +20,8 @@ import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MapViewLayoutParams;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationConfiguration;
@@ -45,6 +51,7 @@ public class MapFragment extends SupportMapFragment {
     private LocationClient mLocationClient;
     private BDLocationListener mListener;
     private BDLocation mLastLocation;
+    private MapView mMapView;
 
     public MapFragment() {
         // Required empty public constructor
@@ -60,6 +67,33 @@ public class MapFragment extends SupportMapFragment {
                 activity.setTitle("查看车辆");
             }
         }
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater layoutInflater, ViewGroup viewGroup, Bundle bundle) {
+        mMapView = (MapView) super.onCreateView(layoutInflater, viewGroup, bundle);
+        final View view = LayoutInflater.from(getActivity()).inflate(R.layout.layout_goto_my_location, mMapView, false);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BaiduMap map = getBaiduMap();
+                if (mLastLocation != null) {
+                    LatLng ll = new LatLng(mLastLocation.getLatitude(),
+                            mLastLocation.getLongitude());
+                    MapStatusUpdate u = MapStatusUpdateFactory.newLatLng(ll);
+                    map.animateMapStatus(u);
+                }
+            }
+        });
+        mMapView.post(new Runnable() {
+            @Override
+            public void run() {
+                Point point = new Point((int) (mMapView.getWidth() - getResources().getDisplayMetrics().density * 10), (int) (getResources().getDisplayMetrics().density * 10));
+                mMapView.addView(view, new MapViewLayoutParams.Builder().layoutMode(MapViewLayoutParams.ELayoutMode.absoluteMode).point(point).align(MapViewLayoutParams.ALIGN_RIGHT, MapViewLayoutParams.ALIGN_TOP).build());
+            }
+        });
+        return mMapView;
     }
 
     @Override
