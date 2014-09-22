@@ -47,10 +47,10 @@ public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == RESULT_OK) {
-			try {
-				ChatActivity.activityInstance.finish();
-			} catch (Exception e) {
-			}
+//			try {
+//				ChatActivity.activityInstance.finish();
+//			} catch (Exception e) {
+//			}
 			Intent intent = new Intent(this, ChatActivity.class);
 			if (selectUser == null)
 				return;

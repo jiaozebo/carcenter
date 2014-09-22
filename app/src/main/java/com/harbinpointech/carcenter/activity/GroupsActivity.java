@@ -13,8 +13,6 @@
  */
 package com.harbinpointech.carcenter.activity;
 
-import java.util.List;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -31,6 +29,8 @@ import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.adapter.GroupAdapter;
+
+import java.util.List;
 
 public class GroupsActivity extends BaseActivity {
 	private ListView groupListView;
@@ -62,8 +62,8 @@ public class GroupsActivity extends BaseActivity {
 					//进入群聊
 					Intent intent = new Intent(GroupsActivity.this, ChatActivity.class);
 					// it is group chat
-					intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
-					intent.putExtra("groupId", groupAdapter.getItem(position - 1).getGroupId());
+//					intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
+//					intent.putExtra("groupId", groupAdapter.getItem(position - 1).getGroupId());
 					startActivityForResult(intent, 0);
 				}
 			}

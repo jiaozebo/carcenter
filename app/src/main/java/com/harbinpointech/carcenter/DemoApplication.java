@@ -98,12 +98,12 @@ public class DemoApplication extends Application {
 				Intent intent = new Intent(applicationContext, ChatActivity.class);
 				ChatType chatType = message.getChatType();
 				if(chatType == ChatType.Chat){ //单聊信息
-					intent.putExtra("userId", message.getFrom());
-					intent.putExtra("chatType", ChatActivity.CHATTYPE_SINGLE);
+//					intent.putExtra("userId", message.getFrom());
+//					intent.putExtra("chatType", ChatActivity.CHATTYPE_SINGLE);
 				}else{ //群聊信息
 					//message.getTo()为群聊id
-					intent.putExtra("groupId", message.getTo());
-					intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
+//					intent.putExtra("groupId", message.getTo());
+//					intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
 				}
 				return intent;
 			}

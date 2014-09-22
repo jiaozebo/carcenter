@@ -13,12 +13,6 @@
  */
 package com.harbinpointech.carcenter.activity;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -57,6 +51,12 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.adapter.ChatHistoryAdapter;
 import com.harbinpointech.carcenter.db.InviteMessgeDao;
 import com.harbinpointech.carcenter.domain.User;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 聊天记录Fragment
@@ -101,14 +101,14 @@ public class ChatHistoryFragment extends Fragment {
 				else {
 					// 进入聊天页面
 					  Intent intent = new Intent(getActivity(), ChatActivity.class);
-					 if (emContact instanceof EMGroup) {
-		                    //it is group chat
-		                    intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
-		                    intent.putExtra("groupId", ((EMGroup) emContact).getGroupId());
-		                } else {
-		                    //it is single chat
-		                    intent.putExtra("userId", emContact.getUsername());
-		                } 
+//					 if (emContact instanceof EMGroup) {
+//		                    //it is group chat
+//		                    intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
+//		                    intent.putExtra("groupId", ((EMGroup) emContact).getGroupId());
+//		                } else {
+//		                    //it is single chat
+//		                    intent.putExtra("userId", emContact.getUsername());
+//		                }
 					startActivity(intent);
 				}
 			}

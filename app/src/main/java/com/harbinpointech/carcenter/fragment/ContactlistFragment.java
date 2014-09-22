@@ -14,15 +14,14 @@
 package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
-import android.text.Layout;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -42,7 +41,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.easemob.EMCallBack;
 import com.easemob.chat.EMChat;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMContact;
@@ -52,23 +50,19 @@ import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import com.easemob.chat.EMMessage;
 import com.easemob.exceptions.EaseMobException;
-import com.harbinpointech.carcenter.Constant;
-import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
-
-import android.app.AlertDialog;
-
-import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.GroupDetailsActivity;
 import com.harbinpointech.carcenter.activity.MainActivity;
-import com.harbinpointech.carcenter.db.UserDao;
-import com.harbinpointech.carcenter.domain.InviteMessage;
+import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.domain.User;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +75,6 @@ public class ContactlistFragment extends ListFragment {
     private InputMethodManager inputMethodManager;
 
     private List<EMContact> mIMUSers;
-    private UserDao mUserDao;
     private ProgressDialog mDlg;
     private SharedPreferences mPref;
 
@@ -111,7 +104,6 @@ public class ContactlistFragment extends ListFragment {
         mDlg = new ProgressDialog(getActivity());
         mDlg.setMessage("请稍等...");
         mDlg.setCancelable(false);
-        mUserDao = new UserDao(getActivity());
 //        mGroupDao = new
         registerForContextMenu(getListView());
         final String username = getActivity().getIntent().getStringExtra("username");
@@ -122,76 +114,8 @@ public class ContactlistFragment extends ListFragment {
             @Override
             protected Integer doInBackground(Void... params) {
                 try {
-                    if (username == null || (username.equals(DemoApplication.getInstance().getUserName()) && password.equals(DemoApplication.getInstance().getPassword()))) {
-                        // 已经登录过，避免重复登录
-                        mLoginSuccessed = true;
-                    } else {
-                        // 用户名、密码更换了，重新登出、登录
-                        if (DemoApplication.getInstance().getUserName() != null && DemoApplication.getInstance().getPassword() != null) {
-                            DemoApplication.getInstance().logout();
-                        }
-                        // 调用sdk登陆方法登陆聊天服务器
-                        final byte[] lock = new byte[0];
-                        EMChatManager.getInstance().login(username, password, new EMCallBack() {
-
-                            @Override
-                            public void onSuccess() {
-                                // 登陆成功，保存用户名密码
-                                DemoApplication.getInstance().setUserName(username);
-                                DemoApplication.getInstance().setPassword(password);
-                                mLoginSuccessed = true;
-                                synchronized (lock) {
-                                    lock.notify();
-                                }
-                            }
-
-                            @Override
-                            public void onProgress(int progress, final String status) {
-
-                            }
-
-                            @Override
-                            public void onError(int code, final String message) {
-                                mLoginSuccessed = false;
-                                synchronized (lock) {
-                                    lock.notify();
-                                }
-                            }
-                        });
-
-                        synchronized (lock) {
-                            lock.wait();
-                        }
-                    }
-                    if (!mLoginSuccessed) {
-                        return -1;
-                    }
-                    try {
-                        boolean defaultGroupAdded = false;
-                        List<EMGroup> groups = EMGroupManager.getInstance().getAllGroups();
-                        if (groups == null || groups.isEmpty()) {
-                            groups = EMGroupManager.getInstance().getGroupsFromServer();
-                        }
-                        for (EMGroup g : groups) {
-                            if ("140792997963939".equals(g.getGroupId())) {
-                                defaultGroupAdded = true;
-                                break;
-                            }
-                        }
-                        if (!defaultGroupAdded) {
-                            EMGroup group = EMGroupManager.getInstance().getGroupFromServer("140792997963939");
-                            List<String> members = group.getMembers();//获取群成员
-                            Iterator<String> it = members.iterator();
-                            while (it.hasNext()) {
-                                String mem = it.next();
-                                EMContactManager.getInstance().addContact(mem, "i'm in vehicle group..");
-                            }
-                            EMGroupManager.getInstance().joinGroup("140792997963939");
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
+                    JSONObject[] users = new JSONObject[1];
+                    int result = WebHelper.getAllUsers(users);
                     List<String> usernames = EMChatManager.getInstance().getContactUserNames();
                     List<User> us = new ArrayList<User>();
                     for (String name : usernames) {
@@ -200,7 +124,6 @@ public class ContactlistFragment extends ListFragment {
                         mIMUSers.add(u);
                         us.add(u);
                     }
-                    mUserDao.saveContactList(us);
 
 //                    Map<String, User> userlist = new HashMap<String, User>();
 //                    for (String username : usernames) {
@@ -245,7 +168,9 @@ public class ContactlistFragment extends ListFragment {
                     return 0;
                 } catch (EaseMobException e) {
                     e.printStackTrace();
-                } catch (InterruptedException e) {
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
                 return -1;
@@ -315,21 +240,21 @@ public class ContactlistFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
         EMContact c = (EMContact) l.getItemAtPosition(position);
-        if (c instanceof EMGroup) {
-            // 进入群聊列表页面//进入群聊
-            Intent intent = new Intent(getActivity(), ChatActivity.class);
-            // it is group chat
-            intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
-            EMGroup g = (EMGroup) c;
-            intent.putExtra("groupId", g.getGroupId());
-            startActivityForResult(intent, 1000);
-            ((EMGroup) c).setDescription(null);
-        } else {
-            User u = (User) c;
-            u.setUnreadMsgCount(0);
-            // demo中直接进入聊天页面，实际一般是进入用户详情页
-            startActivityForResult(new Intent(getActivity(), ChatActivity.class).putExtra("userId", c.getUsername()).putExtra("nick", c.getNick()), 1000);
-        }
+//        if (c instanceof EMGroup) {
+//            // 进入群聊列表页面//进入群聊
+//            Intent intent = new Intent(getActivity(), ChatActivity.class);
+//            // it is group chat
+//            intent.putExtra(ChatActivity.SENDER_ID, c.geti);
+//            EMGroup g = (EMGroup) c;
+//            intent.putExtra("groupId", g.getGroupId());
+//            startActivityForResult(intent, 1000);
+//            ((EMGroup) c).setDescription(null);
+//        } else {
+//            User u = (User) c;
+//            u.setUnreadMsgCount(0);
+//            // demo中直接进入聊天页面，实际一般是进入用户详情页
+//            startActivityForResult(new Intent(getActivity(), ChatActivity.class).putExtra(ChatActivity., c.getUsername()).putExtra("nick", c.getNick()), 1000);
+//        }
         initView(v, c);
     }
 
@@ -357,7 +282,7 @@ public class ContactlistFragment extends ListFragment {
                                         mIMUSers.add(u);
                                         us.add(u);
                                     }
-                                    mUserDao.saveContactList(us);
+//                                    mUserDao.saveContactList(us);
 
 //                    Map<String, User> userlist = new HashMap<String, User>();
 //                    for (String username : usernames) {
@@ -722,7 +647,7 @@ public class ContactlistFragment extends ListFragment {
             List<User> usrs = new ArrayList<User>();
             for (String userName : usernameList) {
                 User u = new User(userName);
-                mUserDao.saveContact(u);
+//                mUserDao.saveContact(u);
                 usrs.add(u);
             }
 
@@ -742,7 +667,7 @@ public class ContactlistFragment extends ListFragment {
                     if (c.getUsername().equals(usr)) {
                         adapter.remove(c);
                         usrs.remove(usr);
-                        mUserDao.deleteContact(usr);
+//                        mUserDao.deleteContact(usr);
                         break;
                     }
                 }

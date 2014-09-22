@@ -106,6 +106,36 @@ public class WebHelper {
         }
     }
 
+    /**
+     * @param params
+     * @return
+     * @throws JSONException
+     * @throws IOException
+     */
+    public static int getAllUsers(JSONObject[] params) throws JSONException, IOException {
+        int result = doPost(URL + "GetAllUsers", params);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
+    /**
+     * @param params
+     * @return
+     * @throws JSONException
+     * @throws IOException
+     */
+    public static int sendMessage(JSONObject[] params) throws JSONException, IOException {
+        int result = doPost(URL + "GetAllUsers", params);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
     //
     public static int singin(String carName, double latitude, double longitude) throws JSONException, IOException {
         JSONObject[] params = new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", carName, "lat", latitude, "lng", longitude))};
@@ -252,7 +282,7 @@ public class WebHelper {
                 y = new String(Base64.decode(y, 0));
                 data[0] = Double.parseDouble(y);
 
-                Log.i(JSESSIONID,String.format("%.08f,%.08f->%.08f,%.08f",dx,dy, data[1],data[0]));
+                Log.i(JSESSIONID, String.format("%.08f,%.08f->%.08f,%.08f", dx, dy, data[1], data[0]));
             }
             return result;
         }
