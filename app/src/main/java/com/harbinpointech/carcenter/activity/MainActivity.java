@@ -3,7 +3,6 @@ package com.harbinpointech.carcenter.activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -11,13 +10,8 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
 import com.baidu.mapapi.SDKInitializer;
-import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMConversation;
-import com.easemob.chat.EMMessage;
-import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
@@ -49,16 +43,16 @@ public class MainActivity extends ActionBarActivity {
         FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
         Fragment map = new MapFragment();
         Fragment fixCar = Fragment.instantiate(this, FixCarFragment.class.getName(), null);
-        Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), null);
+        Bundle args = new Bundle();
+        args.putString(LoginActivity.KEY_USER_NAME, getIntent().getStringExtra("username"));
+        args.putString(LoginActivity.KEY_PWD, getIntent().getStringExtra("password"));
+        Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
         mFragmentsMap.put(R.id.main_btn_chat, chatList);
         trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).hide(fixCar).hide(chatList).commit();
 
         mMsgReceiver = new NewMessageBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter(EMChatManager.getInstance().getNewMessageBroadcastAction());
-        intentFilter.setPriority(3);
-        registerReceiver(mMsgReceiver, intentFilter);
 
 
         setTitle("查看车辆");
@@ -76,7 +70,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        EMChatManager.getInstance().activityResumed();
     }
 
     private static final int REQUEST_SCAN_VEHICLE = 0x1000;
@@ -133,10 +126,9 @@ public class MainActivity extends ActionBarActivity {
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SETTING && resultCode == RESULT_QUIT) {
-            DemoApplication.getInstance().logout();
             WebHelper.logout();
             finish();
-        }else if (requestCode == REQUEST_SCAN_VEHICLE && resultCode == RESULT_OK){
+        } else if (requestCode == REQUEST_SCAN_VEHICLE && resultCode == RESULT_OK) {
             int old = mCurrentSelectId;
             findViewById(mCurrentSelectId).setSelected(false);
             mCurrentSelectId = R.id.main_btn_fix_car;
@@ -176,12 +168,7 @@ public class MainActivity extends ActionBarActivity {
             // 消息id
             String msgId = intent.getStringExtra("msgid");
             // 收到这个广播的时候，message已经在db和内存里了，可以通过id获取mesage对象
-            EMMessage message =
-                    EMChatManager.getInstance().getMessage(msgId);
-
             // 刷新bottom bar消息未读数
-            updateUnreadLabel(message);
-//            if (currentTabIndex == 0) {
 //                // 当前页面如果为聊天历史页面，刷新此页面
 //                if (chatHistoryFragment != null) {
 //                    chatHistoryFragment.refresh();
@@ -191,58 +178,5 @@ public class MainActivity extends ActionBarActivity {
             abortBroadcast();
         }
     }
-
-    /**
-     * 刷新未读消息数
-     *
-     * @param message
-     */
-    public void updateUnreadLabel(EMMessage message) {
-        int count = getUnreadMsgCountTotal();
-        TextView unreadLabel = (TextView) findViewById(R.id.unread_msg_number);
-        if (count > 0) {
-            unreadLabel.setText("*");
-            unreadLabel.setVisibility(View.VISIBLE);
-        } else {
-            unreadLabel.setVisibility(View.INVISIBLE);
-        }
-        if (message != null) {
-            ContactlistFragment clf = (ContactlistFragment) mFragmentsMap.get(R.id.main_btn_chat);
-            clf.updateUnreadLable(message);
-        }
-    }
-
-    /**
-     * 获取未读消息数
-     *
-     * @return
-     */
-    public int getUnreadMsgCountTotal() {
-        int unreadMsgCountTotal = 0;
-        unreadMsgCountTotal = EMChatManager.getInstance().getUnreadMsgsCount();
-        return unreadMsgCountTotal;
-    }
-
-    /**
-     * 消息回执BroadcastReceiver
-     */
-    private BroadcastReceiver ackMessageReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String msgid = intent.getStringExtra("msgid");
-            String from = intent.getStringExtra("from");
-            EMConversation conversation = EMChatManager.getInstance().getConversation(from);
-            if (conversation != null) {
-                // 把message设为已读
-                EMMessage msg = conversation.getMessage(msgid);
-                if (msg != null) {
-                    msg.isAcked = true;
-                }
-            }
-            abortBroadcast();
-        }
-    };
-
 
 }

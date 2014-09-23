@@ -14,16 +14,11 @@
 
 package com.harbinpointech.carcenter.activity;
 
-import com.easemob.chat.EMChatManager;
-
 import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
 
 public class BaseActivity extends Activity{
 	@Override
 	protected void onResume() {
 		super.onResume();
-		//onresume时，取消notification显示
-		EMChatManager.getInstance().activityResumed();
 	}
 }

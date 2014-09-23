@@ -34,7 +34,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/edit_text_bg">
 
-                <com.tsinglink.android.babyonline.view.PasteEditText
+                <com.harbinpointech.carcenter.widget.PasteEditText
                     android:id="@+id/chat_et_message"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

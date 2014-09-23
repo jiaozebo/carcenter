@@ -1,8 +1,11 @@
 package com.harbinpointech.carcenter.activity;
 
+import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.BaseColumns;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -12,12 +15,23 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.adapter.MessageAdapter;
+import com.harbinpointech.carcenter.data.Message;
+import com.harbinpointech.carcenter.data.WebHelper;
+
+import org.json.JSONException;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class ChatActivity extends ActionBarActivity {
 
     public static final String SENDER_ID = "sender_id";
+    public static final String SENDER_NAME = "sender_name";
     public static final String USER_ID = "my_id";
     private int mSenderId;
     private int mMyId;
@@ -45,10 +59,48 @@ public class ChatActivity extends ActionBarActivity {
     }
 
     public void onSend(View view) {
-        String text = mEditor.getText().toString();
+        final String text = mEditor.getText().toString();
         if (TextUtils.isEmpty(text)) {
             mEditor.requestFocus();
         } else {
+            new AsyncTask<Void, Integer, Integer>() {
+                public long mId;
+
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    SQLiteDatabase db = CarApp.lockDataBase();
+                    ContentValues cv = new ContentValues();
+                    cv.put(Message.CONTENT, text);
+                    cv.put(Message.SENDER, mMyId);
+                    cv.put(Message.RECEIVER, mSenderId);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    cv.put(Message.DATETIME, sdf.format(new Date()));
+                    mId = db.insert(Message.TABLE, null, cv);
+
+                }
+
+                @Override
+                protected void onPostExecute(Integer integer) {
+                    super.onPostExecute(integer);
+                    SQLiteDatabase db = CarApp.lockDataBase();
+                    ContentValues cv = new ContentValues();
+                    cv.put(Message.STATE, integer == 0 ? 1 : -1);
+                    db.update(Message.TABLE, cv, BaseColumns._ID + "=?", new String[]{String.valueOf(mId)});
+                }
+
+                @Override
+                protected Integer doInBackground(Void... params) {
+                    try {
+                        return WebHelper.sendMessage(text, mSenderId);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return -1;
+                }
+            }.execute();
 
         }
     }
@@ -82,42 +134,30 @@ public class ChatActivity extends ActionBarActivity {
 
         @Override
         protected Integer doInBackground(Void... params) {
-            int result = 0;
-
-//            Cursor c = null;
-//            try {
-//                SQLiteDatabase db = MyCameraApp.lockDataBase();
-//                c = db.rawQuery(String.format("select * from chat where %s=? or %s=?", Chat.SENDER_INDEX, Chat.RECEIVER_INDEX), new String[]{String.valueOf(mSenderId)});
-//                if (c.moveToFirst()) {
-//                    mCursor = c;
-//                    c = null;
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            } finally {
-//                if (c != null) {
-//                    c.close();
-//                }
-//            }
-            return 0;
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            switch (values[0]) {
-                case 0:
-                    break;
-                case 1:
-                    break;
+            Cursor c = null;
+            try {
+                SQLiteDatabase db = CarApp.lockDataBase();
+                c = db.rawQuery(String.format("select * from %s where %s=? or %s=?", Message.TABLE, Message.SENDER, Message.RECEIVER), new String[]{String.valueOf(mSenderId)});
+                if (c.moveToFirst()) {
+                    mCursor = c;
+                    c = null;
+                }
+                return 0;
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
             }
+            return -1;
         }
 
         @Override
         protected void onPostExecute(final Integer result) {
             showProgress(false);
-//            MessageAdapter ma = new MessageAdapter(ChatActivity.this, mCursor, mSenderId);
-//            mListView.setAdapter(ma);
+            MessageAdapter ma = new MessageAdapter(ChatActivity.this, mCursor, mSenderId);
+            mListView.setAdapter(ma);
         }
     }
 
@@ -134,3 +174,4 @@ public class ChatActivity extends ActionBarActivity {
         super.onDestroy();
     }
 }
+

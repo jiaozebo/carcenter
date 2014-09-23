@@ -1,27 +1,10 @@
 package com.harbinpointech.carcenter.activity;
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
 
-import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMChatOptions;
 import com.harbinpointech.carcenter.R;
-
-import java.util.List;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -43,13 +26,12 @@ public class SettingsActivity extends PreferenceActivity {
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
 
-    private EMChatOptions chatOptions;
+//    private EMChatOptions chatOptions;
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        chatOptions = EMChatManager.getInstance().getChatOptions();
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean("notifications_new_message", chatOptions.getNotificationEnable()).putBoolean("notifications_new_message_sound", chatOptions.getNoticedBySound()).putBoolean("notifications_new_message_vibrate", chatOptions.getNoticedByVibrate()).commit();
+//        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean("notifications_new_message", chatOptions.getNotificationEnable()).putBoolean("notifications_new_message_sound", chatOptions.getNoticedBySound()).putBoolean("notifications_new_message_vibrate", chatOptions.getNoticedByVibrate()).commit();
         setupSimplePreferencesScreen();
     }
 
@@ -98,11 +80,11 @@ public class SettingsActivity extends PreferenceActivity {
             String key = preference.getKey();
             Boolean enable = (Boolean) value;
             if ("notifications_new_message".equals(key)) {
-                chatOptions.setNotificationEnable(enable);
+//                chatOptions.setNotificationEnable(enable);
             }else if ("notifications_new_message_vibrate".equals(key)){
-                chatOptions.setNoticedByVibrate(enable);
+//                chatOptions.setNoticedByVibrate(enable);
             }else if ("notifications_new_message_sound".equals(key)){
-                chatOptions.setNoticeBySound(enable);
+//                chatOptions.setNoticeBySound(enable);
             }
             return true;
         }

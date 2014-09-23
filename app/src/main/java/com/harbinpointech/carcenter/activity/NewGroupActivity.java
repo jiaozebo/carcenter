@@ -25,7 +25,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.easemob.chat.EMGroupManager;
 import com.harbinpointech.carcenter.R;
 
 public class NewGroupActivity extends BaseActivity {
@@ -70,7 +69,6 @@ public class NewGroupActivity extends BaseActivity {
 			startActivity(intent);
 		} else {
 			// 进通讯录选人
-			startActivityForResult(new Intent(this, GroupPickContactsActivity.class).putExtra("groupName", name), 0);
 		}
 	}
 	
@@ -93,13 +91,9 @@ public class NewGroupActivity extends BaseActivity {
 					String[] members = data.getStringArrayExtra("newmembers");
 					try {
 						if(checkBox.isChecked()){
-							//创建公开群，此种方式创建的群，可以自由加入
-							EMGroupManager.getInstance().createPublicGroup(groupName, desc, members, false);
-							//创建公开群，此种方式创建的群，可以需要申请，等群主同意后才能加入此群
-//							EMGroupManager.getInstance().createPublicGroup(groupName, desc, members, true);
+
 						}else{
-							//创建不公开群
-							EMGroupManager.getInstance().createPrivateGroup(groupName, desc, members, memberCheckbox.isChecked());
+
 						}
 						runOnUiThread(new Runnable() {
 							public void run() {

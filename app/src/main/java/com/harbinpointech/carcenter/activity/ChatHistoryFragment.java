@@ -14,7 +14,6 @@
 package com.harbinpointech.carcenter.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -30,33 +29,13 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMContact;
-import com.easemob.chat.EMConversation;
-import com.easemob.chat.EMGroup;
-import com.easemob.chat.EMGroupManager;
-import com.easemob.chat.EMMessage;
-import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
-import com.harbinpointech.carcenter.adapter.ChatHistoryAdapter;
-import com.harbinpointech.carcenter.db.InviteMessgeDao;
-import com.harbinpointech.carcenter.domain.User;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 聊天记录Fragment
@@ -66,8 +45,6 @@ public class ChatHistoryFragment extends Fragment {
 
 	private InputMethodManager inputMethodManager;
 	private ListView listView;
-	private Map<String, User> contactList;
-	private ChatHistoryAdapter adapter;
 	private EditText query;
 	private ImageButton clearSearch;
 	public RelativeLayout errorItem;
@@ -86,33 +63,7 @@ public class ChatHistoryFragment extends Fragment {
 		errorItem = (RelativeLayout) getView().findViewById(R.id.rl_error_item);
 		errorText = (TextView) errorItem.findViewById(R.id.tv_connect_errormsg);
 		// contact list
-		contactList = DemoApplication.getInstance().getContactList();
-		listView = (ListView) getView().findViewById(R.id.list);
-		adapter = new ChatHistoryAdapter(getActivity(), 1, loadUsersWithRecentChat());
-		// 设置adapter
-		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new OnItemClickListener() {
 
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				EMContact emContact = adapter.getItem(position);
-				if (adapter.getItem(position).getUsername().equals(DemoApplication.getInstance().getUserName()))
-					Toast.makeText(getActivity(), "不能和自己聊天", Toast.LENGTH_SHORT).show();
-				else {
-					// 进入聊天页面
-					  Intent intent = new Intent(getActivity(), ChatActivity.class);
-//					 if (emContact instanceof EMGroup) {
-//		                    //it is group chat
-//		                    intent.putExtra("chatType", ChatActivity.CHATTYPE_GROUP);
-//		                    intent.putExtra("groupId", ((EMGroup) emContact).getGroupId());
-//		                } else {
-//		                    //it is single chat
-//		                    intent.putExtra("userId", emContact.getUsername());
-//		                }
-					startActivity(intent);
-				}
-			}
-		});
 		// 注册上下文菜单
 		registerForContextMenu(listView);
 
@@ -136,12 +87,7 @@ public class ChatHistoryFragment extends Fragment {
 		query.addTextChangedListener(new TextWatcher() {
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				
-				adapter.getFilter().filter(s);
-				if (s.length() > 0) {
-					clearSearch.setVisibility(View.VISIBLE);
-				} else {
-					clearSearch.setVisibility(View.INVISIBLE);
-				}
+
 			}
 
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -171,16 +117,7 @@ public class ChatHistoryFragment extends Fragment {
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		if (item.getItemId() == R.id.delete_message) {
-			EMContact tobeDeleteUser = adapter.getItem(((AdapterContextMenuInfo) item.getMenuInfo()).position);
-			// 删除此会话
-			EMChatManager.getInstance().deleteConversation(tobeDeleteUser.getUsername());
-			InviteMessgeDao inviteMessgeDao = new InviteMessgeDao(getActivity());
-			inviteMessgeDao.deleteMessage(tobeDeleteUser.getUsername());
-			adapter.remove(tobeDeleteUser);
-			adapter.notifyDataSetChanged();
 
-			// 更新消息未读数
-			((MainChatActivity) getActivity()).updateUnreadLabel();
 
 			return true;
 		}
@@ -191,61 +128,10 @@ public class ChatHistoryFragment extends Fragment {
 	 * 刷新页面
 	 */
 	public void refresh() {
-		adapter = new ChatHistoryAdapter(getActivity(), R.layout.row_chat_history, loadUsersWithRecentChat());
-		listView.setAdapter(adapter);
-		adapter.notifyDataSetChanged();
+
 	}
 
-	/**
-	 * 获取有聊天记录的users和groups
-	 * 
 
-	 * @return
-	 */
-	private List<EMContact> loadUsersWithRecentChat() {
-		List<EMContact> resultList = new ArrayList<EMContact>();
-		for (User user : contactList.values()) {
-			EMConversation conversation = EMChatManager.getInstance().getConversation(user.getUsername());
-			if (conversation.getMsgCount() > 0) {
-				resultList.add(user);
-			}
-		}
-		for(EMGroup group : EMGroupManager.getInstance().getAllGroups()){
-			EMConversation conversation = EMChatManager.getInstance().getConversation(group.getGroupId());
-			if(conversation.getMsgCount() > 0){
-				resultList.add(group);
-			}
-			
-		}
-		// 排序
-		sortUserByLastChatTime(resultList);
-		return resultList;
-	}
-
-	/**
-	 * 根据最后一条消息的时间排序
-	 *
-	 */
-	private void sortUserByLastChatTime(List<EMContact> contactList) {
-		Collections.sort(contactList, new Comparator<EMContact>() {
-			@Override
-			public int compare(final EMContact user1, final EMContact user2) {
-				EMConversation conversation1 = EMChatManager.getInstance().getConversation(user1.getUsername());
-				EMConversation conversation2 = EMChatManager.getInstance().getConversation(user2.getUsername());
-
-				EMMessage user2LastMessage = conversation2.getLastMessage();
-				EMMessage user1LastMessage = conversation1.getLastMessage();
-				if (user2LastMessage.getMsgTime() == user1LastMessage.getMsgTime()) {
-					return 0;
-				} else if (user2LastMessage.getMsgTime() > user1LastMessage.getMsgTime()) {
-					return 1;
-				} else {
-					return -1;
-				}
-			}
-
-		});
-	}
 
 	@Override
 	public void onHiddenChanged(boolean hidden) {

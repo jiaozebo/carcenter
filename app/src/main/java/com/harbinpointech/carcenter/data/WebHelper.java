@@ -13,6 +13,7 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -122,13 +123,22 @@ public class WebHelper {
     }
 
     /**
-     * @param params
+     * @param message
+     * @param users
      * @return
      * @throws JSONException
      * @throws IOException
      */
-    public static int sendMessage(JSONObject[] params) throws JSONException, IOException {
-        int result = doPost(URL + "GetAllUsers", params);
+    public static int sendMessage(String message, int... users) throws JSONException, IOException {
+        JSONObject json = new JSONObject();
+        json.put("message", message);
+        JSONArray ja = new JSONArray();
+        for (int user : users) {
+//            ja.put(new JSONObject(String.format("{\"%s\":\"%s\"}", "id", String.valueOf(user))));
+            ja.put(String.valueOf(user));
+        }
+        json.put("userIDs", ja);
+        int result = doPost(URL + "SendMessage", new JSONObject[]{json});
         if (result == 200) {
             return 0;
         } else {

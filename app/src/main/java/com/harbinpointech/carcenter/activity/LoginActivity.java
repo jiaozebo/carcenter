@@ -16,6 +16,7 @@ package com.harbinpointech.carcenter.activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -23,13 +24,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.easemob.EMCallBack;
-import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMContactManager;
-import com.easemob.chat.EMGroup;
-import com.easemob.chat.EMGroupManager;
-import com.easemob.exceptions.EaseMobException;
-import com.harbinpointech.carcenter.DemoApplication;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
@@ -39,13 +33,13 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * 登陆页面
  */
 public class LoginActivity extends BaseActivity {
+    public static final String KEY_USER_NAME = "key_user_name";
+    public static final String KEY_PWD = "key_pwd";
     private EditText usernameEditText;
     private EditText passwordEditText;
 
@@ -60,8 +54,8 @@ public class LoginActivity extends BaseActivity {
         usernameEditText = (EditText) findViewById(R.id.username);
         passwordEditText = (EditText) findViewById(R.id.password);
 
-        usernameEditText.setText(DemoApplication.getInstance().getUserName());
-        passwordEditText.setText(DemoApplication.getInstance().getPassword());
+        usernameEditText.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_USER_NAME, null));
+        passwordEditText.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_PWD, null));
         // 如果用户名改变，清空密码
         usernameEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -107,11 +101,6 @@ public class LoginActivity extends BaseActivity {
                 @Override
                 protected Integer doInBackground(Void... params) {
                     try {
-                        try {
-                            EMChatManager.getInstance().createAccountOnServer(username, password);
-                        } catch (EaseMobException e) {
-                            e.printStackTrace();
-                        }
                         return WebHelper.login(username, password);
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -137,6 +126,9 @@ public class LoginActivity extends BaseActivity {
                     super.onPostExecute(integer);
 
                     if (integer == 0) {
+                        PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).edit().putString(KEY_USER_NAME, username).putString(KEY_PWD, password).commit();
+//                        PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).getString(KEY_PWD, null));
+
                         // 如果用户名密码都有，直接进入主页面
                         mProgress.dismiss();
                         Intent i = new Intent(LoginActivity.this, MainActivity.class);
@@ -154,21 +146,10 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
-    /**
-     * 注册
-     *
-     * @param view
-     */
-    public void register(View view) {
-        startActivityForResult(new Intent(this, RegisterActivity.class), 0);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (DemoApplication.getInstance().getUserName() != null) {
-            usernameEditText.setText(DemoApplication.getInstance().getUserName());
-        }
     }
 
 }

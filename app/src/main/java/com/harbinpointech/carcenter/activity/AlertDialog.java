@@ -14,7 +14,6 @@
 package com.harbinpointech.carcenter.activity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,12 +22,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.easemob.util.ImageUtils;
 import com.harbinpointech.carcenter.R;
-import com.harbinpointech.carcenter.task.DownloadImageTask;
-import com.harbinpointech.carcenter.utils.ImageCache;
-
-import java.io.File;
 
 public class AlertDialog extends BaseActivity {
 	private TextView mTextView;
@@ -72,17 +66,7 @@ public class AlertDialog extends BaseActivity {
 			mButton.setVisibility(View.VISIBLE);
 		if(path != null){
 			 //优先拿大图，没有去取缩略图
-			if(!new File(path).exists())
-				path = DownloadImageTask.getThumbnailImagePath(path);
-		    imageView.setVisibility(View.VISIBLE);
-		    ((TextView)findViewById(R.id.alert_message)).setVisibility(View.GONE);
-		    if(ImageCache.getInstance().get(path) != null){
-		        imageView.setImageBitmap(ImageCache.getInstance().get(path));
-		    }else{
-		        Bitmap bm = ImageUtils.decodeScaleImage(path, 150, 150);
-		        imageView.setImageBitmap(bm);
-		        ImageCache.getInstance().put(path, bm);
-		    }
+
 		    
 		}
 		if(isEditextShow){
