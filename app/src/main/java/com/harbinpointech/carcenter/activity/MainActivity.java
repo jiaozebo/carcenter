@@ -3,15 +3,18 @@ package com.harbinpointech.carcenter.activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.baidu.mapapi.SDKInitializer;
+import com.harbinpointech.carcenter.QueryInfosService;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
@@ -47,21 +50,24 @@ public class MainActivity extends ActionBarActivity {
         args.putString(LoginActivity.KEY_USER_NAME, getIntent().getStringExtra("username"));
         args.putString(LoginActivity.KEY_PWD, getIntent().getStringExtra("password"));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
-        mFragmentsMap.put(R.id.main_btn_view_cars, map);
+        mFragmentsMap.put(R.id.main_btn_view_cars,chatList );
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
-        mFragmentsMap.put(R.id.main_btn_chat, chatList);
-        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).hide(fixCar).hide(chatList).commit();
+        mFragmentsMap.put(R.id.main_btn_chat, map);
+        trx.add(R.id.fragment_container, chatList).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, map).hide(fixCar).hide(map).commit();
 
         mMsgReceiver = new NewMessageBroadcastReceiver();
-
-
+        IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMsgReceiver, inf);
         setTitle("查看车辆");
+
+        Intent i = new Intent(this, QueryInfosService.class);
+        startService(i);
     }
 
     @Override
     protected void onDestroy() {
         if (mMsgReceiver != null) {
-            unregisterReceiver(mMsgReceiver);
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mMsgReceiver);
             mMsgReceiver = null;
         }
         super.onDestroy();
@@ -126,6 +132,8 @@ public class MainActivity extends ActionBarActivity {
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SETTING && resultCode == RESULT_QUIT) {
+            Intent i = new Intent(this, QueryInfosService.class);
+            stopService(i);
             WebHelper.logout();
             finish();
         } else if (requestCode == REQUEST_SCAN_VEHICLE && resultCode == RESULT_OK) {
@@ -165,17 +173,6 @@ public class MainActivity extends ActionBarActivity {
     private class NewMessageBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // 消息id
-            String msgId = intent.getStringExtra("msgid");
-            // 收到这个广播的时候，message已经在db和内存里了，可以通过id获取mesage对象
-            // 刷新bottom bar消息未读数
-//                // 当前页面如果为聊天历史页面，刷新此页面
-//                if (chatHistoryFragment != null) {
-//                    chatHistoryFragment.refresh();
-//                }
-//            }
-            // 注销广播，否则在MainChatActivity中会收到这个广播
-            abortBroadcast();
         }
     }
 

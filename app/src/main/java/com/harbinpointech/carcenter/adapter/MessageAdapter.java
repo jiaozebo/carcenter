@@ -20,6 +20,10 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.utils.SmileUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MessageAdapter extends CursorAdapter {
 
     private final static String TAG = "msg";
@@ -99,26 +103,31 @@ public class MessageAdapter extends CursorAdapter {
         holder.tv.setText(span, BufferType.SPANNABLE);
 
         if (type == MESSAGE_TYPE_SENT_TXT) {
-            holder.pb.setVisibility(View.GONE);
-            holder.staus_iv.setVisibility(View.GONE);
+            holder.pb.setVisibility(c.getInt(c.getColumnIndex(Message.STATE)) == -1 ? View.VISIBLE : View.GONE);
+//            holder.staus_iv.setVisibility(View.GONE);
+        } else {
+//            holder.tv_userId.setText();
+            holder.tv_userId.setText(c.getString(c.getColumnIndex(Message.SENDER)));
         }
 
         TextView timestamp = (TextView) convertView.findViewById(R.id.timestamp);
 
-        timestamp.setText(c.getString(c.getColumnIndex(Message.DATETIME)));
+        String date_time = c.getString(c.getColumnIndex(Message.DATETIME));
+        timestamp.setText(date_time);
         timestamp.setVisibility(View.VISIBLE);
 
-//        if (position == 0) {
-//
-//        } else {
-//            //两条消息时间离得如果稍长，显示时间
-//            if (closeEnough(message.getMsgTime(), conversation.getMessage(position - 1).getMsgTime())) {
-//                timestamp.setVisibility(View.GONE);
-//            } else {
-//                timestamp.setText(DateUtils.getTimestampString(new Date(message.getMsgTime())));
-//                timestamp.setVisibility(View.VISIBLE);
-//            }
-//        }
+        if (position != 0) {
+            //两条消息时间离得如果稍长，显示时间
+            Cursor prev = (Cursor) getItem(position - 1);
+            String prev_date_time = prev.getString(prev.getColumnIndex(Message.DATETIME));
+            try {
+                if (closeEnough(date_time, prev_date_time)) {
+                    timestamp.setVisibility(View.GONE);
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
         return convertView;
     }
 
@@ -132,8 +141,11 @@ public class MessageAdapter extends CursorAdapter {
 
     }
 
-    private static boolean closeEnough(String datetime1, String datetime2) {
-        return true;
+    private static boolean closeEnough(String datetime1, String datetime2) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date d1 = sdf.parse(datetime1);
+        Date d2 = sdf.parse(datetime2);
+        return Math.abs(d1.getTime() - d2.getTime()) < 300000;
     }
 
 

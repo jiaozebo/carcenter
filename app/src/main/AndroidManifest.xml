@@ -240,9 +240,15 @@
         </activity>
         <activity
             android:name=".activity.ScanActivity"
-            android:theme="@style/FloatActionBar"
-            android:label="扫描二维码" >
+            android:label="扫描二维码"
+            android:theme="@style/FloatActionBar" >
         </activity>
+
+        <service
+            android:name=".QueryInfosService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>
