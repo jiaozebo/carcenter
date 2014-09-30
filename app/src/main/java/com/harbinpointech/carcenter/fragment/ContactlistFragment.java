@@ -15,30 +15,34 @@ package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.harbinpointech.carcenter.CarApp;
+import com.harbinpointech.carcenter.CarSQLiteOpenHelper;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.LoginActivity;
+import com.harbinpointech.carcenter.data.Contacts;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
@@ -56,7 +60,8 @@ public class ContactlistFragment extends ListFragment {
 
     private SharedPreferences mPref;
     private String mMyName;
-    private int mMyIndex;
+    private String mMyIndex;
+    private Cursor mCursor;
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -79,6 +84,21 @@ public class ContactlistFragment extends ListFragment {
 
 //        mGroupDao = new
         registerForContextMenu(getListView());
+        setListAdapter(new CursorAdapter(getActivity(), null, false) {
+            @Override
+            public View newView(Context context, Cursor cursor, ViewGroup parent) {
+                View convertView = getLayoutInflater(null).inflate(android.R.layout.simple_list_item_1, parent, false);
+                TextView text = (TextView) convertView.findViewById(android.R.id.text1);
+                text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
+                return convertView;
+            }
+
+            @Override
+            public void bindView(View view, Context context, Cursor cursor) {
+                TextView text = (TextView) view.findViewById(android.R.id.text1);
+                text.setText(cursor.getString(cursor.getColumnIndex(Contacts.NAME)));
+            }
+        });
         new AsyncTask<Void, Integer, Integer>() {
             JSONArray mUserSets;
 
@@ -92,11 +112,11 @@ public class ContactlistFragment extends ListFragment {
                     for (int i = 0; i < mUserSets.length(); i++) {
                         JSONObject user = mUserSets.getJSONObject(i);
                         if (mMyName.equals(user.getString("Name"))) {
-                            mUserSets.remove(i);
+                            mMyIndex = user.getString(Contacts.ID);
                             break;
                         }
-                        mMyIndex = user.getInt("ID");
                     }
+                    CarSQLiteOpenHelper.insert(Contacts.TABLE, mUserSets);
                     return 0;
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -109,61 +129,19 @@ public class ContactlistFragment extends ListFragment {
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                setListShown(false);
+                mCursor = CarApp.lockDataBase().rawQuery(String.format("select * from %s where %s != '%s'", Contacts.TABLE, Contacts.NAME, mMyName), null);
+                CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
+                cursorAdapter.changeCursor(mCursor);
             }
 
             @Override
             protected void onPostExecute(Integer result) {
                 super.onPostExecute(result);
-
                 if (result == 0) {
-                    setListAdapter(new BaseAdapter() {
-                        @Override
-                        public int getCount() {
-                            return mUserSets.length();
-                        }
-
-                        @Override
-                        public Object getItem(int position) {
-                            try {
-                                return mUserSets.getJSONObject(position);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                            return null;
-                        }
-
-                        @Override
-                        public long getItemId(int position) {
-                            JSONObject user = (JSONObject) getItem(position);
-                            try {
-                                return user.getInt("ID");
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                            return -1;
-                        }
-
-                        @Override
-                        public View getView(int position, View convertView, ViewGroup parent) {
-                            if (convertView == null) {
-                                convertView = getLayoutInflater(null).inflate(android.R.layout.simple_list_item_1, parent, false);
-                                TextView text = (TextView) convertView.findViewById(android.R.id.text1);
-                                text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
-                            }
-                            TextView text = (TextView) convertView.findViewById(android.R.id.text1);
-                            JSONObject user = (JSONObject) getItem(position);
-                            try {
-                                text.setText(user.getString("Name"));
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                text.setText(null);
-                            }
-                            return convertView;
-                        }
-                    });
+                    mCursor = CarApp.lockDataBase().rawQuery(String.format("select * from %s where %s != '%s'", Contacts.TABLE, Contacts.NAME, mMyName), null);
+                    CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
+                    cursorAdapter.changeCursor(mCursor);
                 }
-                setListShown(true);
             }
         }.execute();
     }
@@ -172,16 +150,12 @@ public class ContactlistFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-        JSONObject user = (JSONObject) l.getItemAtPosition(position);
+        Cursor c = (Cursor) l.getItemAtPosition(position);
         // 进入群聊列表页面//进入群聊
         Intent intent = new Intent(getActivity(), ChatActivity.class);
         // it is group chat
-        intent.putExtra(ChatActivity.SENDER_ID, (int) l.getItemIdAtPosition(position));
-        try {
-            intent.putExtra(ChatActivity.SENDER_NAME, user.getString("Name"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        intent.putExtra(ChatActivity.SENDER_ID, c.getString(c.getColumnIndex(Contacts.ID)));
+        intent.putExtra(ChatActivity.SENDER_NAME, c.getString(c.getColumnIndex(Contacts.NAME)));
         startActivity(intent);
     }
 

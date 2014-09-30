@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.provider.BaseColumns;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
@@ -45,11 +46,11 @@ import java.util.Date;
 
 public class ChatActivity extends ActionBarActivity {
 
-    public static final String SENDER_ID = "sender_id";
-    public static final String SENDER_NAME = "sender_name";
+    public static final String SENDER_ID = Message.SENDER;
+    public static final String SENDER_NAME = "name";
     public static final String USER_ID = "my_id";
-    private int mOtherSideId;
-    private int mMyId;
+    private String mOtherSideId;
+    private String mMyId;
     private Cursor mCursor;
     private ListView mListView;
 
@@ -112,7 +113,7 @@ public class ChatActivity extends ActionBarActivity {
             Cursor c = null;
             try {
                 SQLiteDatabase db = CarApp.lockDataBase();
-                c = db.rawQuery(String.format("select * from MSG where %s=? or %s=?", com.harbinpointech.carcenter.data.Message.SENDER, com.harbinpointech.carcenter.data.Message.RECEIVER), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
+                c = db.rawQuery(String.format("select * from %s where %s=? or %s=? order by %s desc;", Message.TABLE, Message.SENDER, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
                 if (c.moveToFirst()) {
                     mCursor = c;
                 }
@@ -126,18 +127,25 @@ public class ChatActivity extends ActionBarActivity {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             SQLiteDatabase db = CarApp.lockDataBase();
             ContentValues cv = new ContentValues();
-            cv.put(com.harbinpointech.carcenter.data.Message.CONTENT, text);
-            cv.put(com.harbinpointech.carcenter.data.Message.SENDER, mMyId);
-            cv.put(com.harbinpointech.carcenter.data.Message.RECEIVER, mOtherSideId);
+            cv.put(Message.CONTENT, text);
+            cv.put(Message.SENDER, mMyId);
+            cv.put(Message.RECEIVER, mOtherSideId);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            cv.put(com.harbinpointech.carcenter.data.Message.DATETIME, sdf.format(new Date()));
-            id = db.insert(com.harbinpointech.carcenter.data.Message.TABLE, null, cv);
+            cv.put(Message.DATETIME, sdf.format(new Date()));
+            cv.put(Message.STATE, -1);
+            id = db.insert(Message.TABLE, null, cv);
             mHandler.obtainMessage(WHAT_SEND_TXT_MESSAGE, (int) id, 0, text).sendToTarget();
             queryCursor();
             return 0;
         } else {
             try {
-                return WebHelper.sendMessage(text, mOtherSideId);
+                int result = WebHelper.sendMessage(text, mOtherSideId);
+                if (result == 0) {
+                    SQLiteDatabase db = CarApp.lockDataBase();
+                    ContentValues cv = new ContentValues();
+                    cv.put(Message.STATE, 0);
+                    db.update(Message.TABLE, cv, BaseColumns._ID + "=?", new String[]{String.valueOf(id)});
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -154,8 +162,8 @@ public class ChatActivity extends ActionBarActivity {
         setContentView(R.layout.activity_chat);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        mOtherSideId = getIntent().getIntExtra(SENDER_ID, 0);
-        mMyId = getIntent().getIntExtra(USER_ID, 0);
+        mOtherSideId = getIntent().getStringExtra(SENDER_ID);
+        mMyId = getIntent().getStringExtra(USER_ID);
         mListView = (ListView) findViewById(android.R.id.list);
         mListView.setEmptyView(findViewById(android.R.id.empty));
 
@@ -262,6 +270,10 @@ public class ChatActivity extends ActionBarActivity {
         }
         if (mCursor != null) {
             mCursor.close();
+        }
+        if (mLocalReceiver != null) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(mLocalReceiver);
+            mLocalReceiver = null;
         }
         super.onDestroy();
     }

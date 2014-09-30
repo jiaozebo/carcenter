@@ -8,10 +8,13 @@ import android.provider.BaseColumns;
  */
 public class Message implements BaseColumns {
     public static final String TABLE = "MSG";
-    public static final String CONTENT = "CONTENT";
-    public static final String SENDER = "SENDER";
-    public static final String RECEIVER = "RECEIVER";
-    public static final String DATETIME = "DATETIME";
+    public static final String CONTENT = "Message1";
+    public static final String SENDER = "SendID";
+    public static final String RECEIVER = "ReceiveID";
+    public static final String DATETIME = "ReceiveTime";
+    /**
+     * -1表示正在发送
+     */
     public static final String STATE = "STATE";
 
 
@@ -22,7 +25,7 @@ public class Message implements BaseColumns {
                                 "%s INTEGER, " +
                                 "%s VARCHAR(1024), " +
                                 "%s datetime not null," +
-                                "%s INTEGER default 0)", TABLE, BaseColumns._ID,
+                                "%s tinyint(1) default 0)", TABLE, BaseColumns._ID,
                         SENDER,
                         RECEIVER,
                         CONTENT,

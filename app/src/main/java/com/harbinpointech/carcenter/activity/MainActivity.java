@@ -50,10 +50,10 @@ public class MainActivity extends ActionBarActivity {
         args.putString(LoginActivity.KEY_USER_NAME, getIntent().getStringExtra("username"));
         args.putString(LoginActivity.KEY_PWD, getIntent().getStringExtra("password"));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
-        mFragmentsMap.put(R.id.main_btn_view_cars,chatList );
+        mFragmentsMap.put(R.id.main_btn_view_cars, map);
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
-        mFragmentsMap.put(R.id.main_btn_chat, map);
-        trx.add(R.id.fragment_container, chatList).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, map).hide(fixCar).hide(map).commit();
+        mFragmentsMap.put(R.id.main_btn_chat, chatList);
+        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).hide(fixCar).hide(chatList).commit();
 
         mMsgReceiver = new NewMessageBroadcastReceiver();
         IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);

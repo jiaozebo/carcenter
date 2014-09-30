@@ -52,6 +52,7 @@ public class MapFragment extends SupportMapFragment {
     private BDLocationListener mListener;
     private BDLocation mLastLocation;
     private MapView mMapView;
+    private Thread mThread;
 
     public MapFragment() {
         // Required empty public constructor
@@ -111,34 +112,6 @@ public class MapFragment extends SupportMapFragment {
                         mCarPos = cars[0];
 
 
-                        JSONArray js = mCarPos.getJSONArray("d");
-                        for (int i = 0; i < js.length(); i++) {
-                            JSONObject item = js.getJSONObject(i);
-                            //定义Maker坐标点
-                            double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
-                            WebHelper.gps2lnglat(data);
-//                            Object []objData = new Object[]{data[0],data[1]};
-
-                            result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
-                            if (result == 0) {
-                                LatLng point = new LatLng(data[0], data[1]);
-//构建Marker图标
-                                BitmapDescriptor bitmap = BitmapDescriptorFactory
-                                        .fromResource(R.drawable.icon_marka);
-//构建MarkerOption，用于在地图上添加Marker
-                                Bundle extrInfo = new Bundle();
-                                extrInfo.putInt("index", i);
-                                OverlayOptions option = new MarkerOptions()
-                                        .position(point)
-                                        .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
-//在地图上添加Marker，并显示
-
-                                Marker m = (Marker) getBaiduMap().addOverlay(option);
-                                option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
-
-                                getBaiduMap().addOverlay(option);
-                            }
-                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -159,34 +132,77 @@ public class MapFragment extends SupportMapFragment {
             protected void onPostExecute(Integer integer) {
                 super.onPostExecute(integer);
                 if (integer == 0) {
-                    //
+                    mThread = new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                JSONArray js = mCarPos.getJSONArray("d");
+                                for (int i = 0; mThread != null && i < js.length(); i++) {
+                                    JSONObject item = js.getJSONObject(i);
+                                    //定义Maker坐标点
+                                    double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+                                    WebHelper.gps2lnglat(data);
+//                            Object []objData = new Object[]{data[0],data[1]};
 
+                                    int result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
+                                    if (result == 0 && isResumed()) {
+                                        LatLng point = new LatLng(data[0], data[1]);
+//构建Marker图标
+                                        BitmapDescriptor bitmap = BitmapDescriptorFactory
+                                                .fromResource(R.drawable.icon_marka);
+//构建MarkerOption，用于在地图上添加Marker
+                                        Bundle extrInfo = new Bundle();
+                                        extrInfo.putInt("index", i);
+                                        OverlayOptions option = new MarkerOptions()
+                                                .position(point)
+                                                .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
+//在地图上添加Marker，并显示
+
+                                        Marker m = (Marker) getBaiduMap().addOverlay(option);
+                                        option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+
+                                        getBaiduMap().addOverlay(option);
+                                    }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    };
+                    mThread.start();
                 }
             }
         }.execute();
-
         initlocation();
         getBaiduMap().setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                Bundle bundle = marker.getExtraInfo();
-                int index = bundle.getInt("index");
-                try {
-                    JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
-                    Intent i = new Intent(getActivity(), VehicleInfoActivity.class);
-                    i.putExtra(VehicleInfoActivity.EXTRA_CARNAME, car.getString("CarName"));
-                    startActivity(i);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    ;
-                }
-                return true;
-            }
-        });
+                                                   @Override
+                                                   public boolean onMarkerClick(Marker marker) {
+                                                       Bundle bundle = marker.getExtraInfo();
+                                                       int index = bundle.getInt("index");
+                                                       try {
+                                                           JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
+                                                           Intent i = new Intent(getActivity(), VehicleInfoActivity.class);
+                                                           i.putExtra(VehicleInfoActivity.EXTRA_CARNAME, car.getString("CarName"));
+                                                           startActivity(i);
+                                                       } catch (Exception e) {
+                                                           e.printStackTrace();
+                                                           ;
+                                                       }
+                                                       return true;
+                                                   }
+                                               }
+
+        );
     }
 
     @Override
     public void onDestroy() {
+        if (mThread != null) {
+            mThread.interrupt();
+            mThread = null;
+        }
         uninitLocation();
         super.onDestroy();
     }

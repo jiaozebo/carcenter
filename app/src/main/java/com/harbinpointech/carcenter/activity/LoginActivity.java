@@ -1,16 +1,4 @@
-/**
- * Copyright (C) 2013-2014 EaseMob Technologies. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package com.harbinpointech.carcenter.activity;
 
 import android.app.ProgressDialog;
@@ -48,7 +36,12 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         if (WebHelper.hasLogined()) {
-            startActivity(new Intent(this, MainActivity.class));
+            String username = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_USER_NAME, null);
+            String password = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_PWD, null);
+            Intent i = new Intent(LoginActivity.this, MainActivity.class);
+            i.putExtra("username", username);
+            i.putExtra("password", password);
+            startActivity(i);
             finish();
         }
         usernameEditText = (EditText) findViewById(R.id.username);

@@ -17,9 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -129,13 +127,13 @@ public class WebHelper {
      * @throws JSONException
      * @throws IOException
      */
-    public static int sendMessage(String message, int... users) throws JSONException, IOException {
+    public static int sendMessage(String message, String... users) throws JSONException, IOException {
         JSONObject json = new JSONObject();
         json.put("message", message);
         JSONArray ja = new JSONArray();
-        for (int user : users) {
+        for (String user : users) {
 //            ja.put(new JSONObject(String.format("{\"%s\":\"%s\"}", "id", String.valueOf(user))));
-            ja.put(String.valueOf(user));
+            ja.put(user);
         }
         json.put("userIDs", ja);
         int result = doPost(URL + "SendMessage", new JSONObject[]{json});
@@ -148,9 +146,6 @@ public class WebHelper {
 
 
     public static int recvMessage(JSONObject[] params) throws JSONException, IOException {
-        JSONObject json = new JSONObject();
-        json.put("users", "75");
-        params[0] = json;
         int result = doPost(URL + "ReceiveMessage", params);
         if (result == 200) {
             return 0;
