@@ -62,6 +62,8 @@ public class ContactlistFragment extends ListFragment {
     private String mMyName;
     private String mMyIndex;
     private Cursor mCursor;
+    //    public static final String MSG_ADD_FRIEND = "[][][][]";
+    public static final String MSG_ADD_FRIEND = "[][][][]";
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -91,7 +93,7 @@ public class ContactlistFragment extends ListFragment {
                 TextView text = (TextView) convertView.findViewById(android.R.id.text1);
                 text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
                 return convertView;
-            }
+            }jq
 
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
@@ -217,10 +219,36 @@ public class ContactlistFragment extends ListFragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_add, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.action_add) {
+            final EditText userEt = new EditText(getActivity());
+            userEt.setHint("请输入对方的ID");
+            new AlertDialog.Builder(getActivity()).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    final String id = userEt.getText().toString();
+                    if (TextUtils.isEmpty(id)) {
+                        return;
+                    }
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                WebHelper.sendMessage(MSG_ADD_FRIEND, id);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }.start();
+                }
+            }).setTitle("添加好友").setNegativeButton("取消", null).setView(userEt).show();
+        }
+        return true;
     }
 }

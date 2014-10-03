@@ -113,7 +113,7 @@ public class ChatActivity extends ActionBarActivity {
             Cursor c = null;
             try {
                 SQLiteDatabase db = CarApp.lockDataBase();
-                c = db.rawQuery(String.format("select * from %s where %s=? or %s=? order by %s desc;", Message.TABLE, Message.SENDER, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
+                c = db.rawQuery(String.format("select * from %s where %s=? or %s=? order by %s;", Message.TABLE, Message.SENDER, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
                 if (c.moveToFirst()) {
                     mCursor = c;
                 }
@@ -164,6 +164,9 @@ public class ChatActivity extends ActionBarActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mOtherSideId = getIntent().getStringExtra(SENDER_ID);
         mMyId = getIntent().getStringExtra(USER_ID);
+        if (TextUtils.isEmpty(mMyId)) {
+            mMyId = "";
+        }
         mListView = (ListView) findViewById(android.R.id.list);
         mListView.setEmptyView(findViewById(android.R.id.empty));
 

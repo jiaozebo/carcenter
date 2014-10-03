@@ -56,7 +56,7 @@ public class QueryInfosService extends Service {
                                         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                                         Intent activityIntent = new Intent(QueryInfosService.this, ChatActivity.class);
 
-                                        activityIntent.putExtra(ChatActivity.SENDER_ID, (int) msg.getInt(Message.SENDER));
+                                        activityIntent.putExtra(ChatActivity.SENDER_ID, msg.getString(Message.SENDER));
                                         activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 
@@ -64,7 +64,7 @@ public class QueryInfosService extends Service {
                                         NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
                                                 .setSmallIcon(R.drawable.icon_account)
                                                 .setContentTitle(getString(R.string.app_name))
-                                                .setContentText("接收到了新通知")
+                                                .setContentText("接收到了新消息")
                                                 .setSound(alarmSound)
                                                 .setAutoCancel(true)
                                                 .setContentIntent(pi);

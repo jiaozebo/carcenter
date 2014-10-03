@@ -129,7 +129,7 @@ public class WebHelper {
      */
     public static int sendMessage(String message, String... users) throws JSONException, IOException {
         JSONObject json = new JSONObject();
-        json.put("message", message);
+        json.put("message", new String(message.getBytes(), "ISO8859-1"));
         JSONArray ja = new JSONArray();
         for (String user : users) {
 //            ja.put(new JSONObject(String.format("{\"%s\":\"%s\"}", "id", String.valueOf(user))));
@@ -147,6 +147,18 @@ public class WebHelper {
 
     public static int recvMessage(JSONObject[] params) throws JSONException, IOException {
         int result = doPost(URL + "ReceiveMessage", params);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
+    public static int createMessageGroup(String name) throws JSONException, IOException {
+        JSONObject obj = new JSONObject();
+        obj.put("name", name);
+        JSONObject[] params = new JSONObject[]{obj};
+        int result = doPost(URL + "CreateMessageGroup", params);
         if (result == 200) {
             return 0;
         } else {

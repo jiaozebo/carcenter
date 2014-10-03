@@ -96,7 +96,7 @@ public class MessageAdapter extends CursorAdapter {
         final ViewHolder holder;
         int type = getItemViewType(position);
         if (convertView == null) {
-            convertView = mInflater.inflate(type == MESSAGE_TYPE_RECV_FILE ? R.layout.row_received_message : R.layout.row_sent_message, parent, false);
+            convertView = mInflater.inflate(type == MESSAGE_TYPE_RECV_TXT ? R.layout.row_received_message : R.layout.row_sent_message, parent, false);
             holder = new ViewHolder();
             holder.pb = (ProgressBar) convertView.findViewById(R.id.pb_sending);
 //            holder.staus_iv = (ImageView) convertView.findViewById(R.id.msg_status);

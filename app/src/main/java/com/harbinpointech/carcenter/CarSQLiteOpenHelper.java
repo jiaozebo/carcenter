@@ -14,7 +14,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by John on 2014/9/23.
@@ -22,7 +28,9 @@ import java.util.Iterator;
 public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String DBNAME = "carcenter.db";
-    private static final int VERSION = 3;
+    private static final int VERSION = 5;
+    private static final SimpleDateFormat sSDFSource = new SimpleDateFormat("yyyy/M/d  HH:mm:ss");
+    private static final SimpleDateFormat sSDFDest = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
 
     public CarSQLiteOpenHelper(Context context) {
         super(context, DBNAME, null, VERSION, null);
@@ -53,11 +61,15 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
                 chat.remove("__type");
 
                 json2contentValue(chat, cv);
-                Integer index = cv.getAsInteger(Contacts.ID);
-                if (index != null) {
-                    c = db.query(table, new String[]{BaseColumns._ID}, Contacts.ID + " = ?", new String[]{String.valueOf(index)}, null, null, null);
-                    if (c.moveToFirst()) {
-                        db.update(table, cv, BaseColumns._ID + "=?", new String[]{c.getString(0)});
+                if (cv.containsKey(Contacts.ID)) {
+                    Integer index = cv.getAsInteger(Contacts.ID);
+                    if (index != null) {
+                        c = db.query(table, new String[]{BaseColumns._ID}, Contacts.ID + " = ?", new String[]{String.valueOf(index)}, null, null, null);
+                        if (c.moveToFirst()) {
+                            db.update(table, cv, BaseColumns._ID + "=?", new String[]{c.getString(0)});
+                            continue;
+                        }
+                    } else {
                         continue;
                     }
                 }
@@ -76,6 +88,20 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
             String key = it.next();
             Object obj = json.get(key);
             if (obj instanceof String) {
+                if (Pattern.matches("\\d+/\\d+/\\d+ \\d+:\\d+:\\d+", (CharSequence) obj)) {
+//                    Pattern p = Pattern.compile("\\d+");
+//                    Matcher m = p.matcher((CharSequence) obj);
+//                    obj = String.format("%04d-%02d-%02d %02d:%02d:%02d",m.group(0), m.group(1),m.group(2),m.group(3),m.group(4),m.group(5));
+
+                    Pattern p = Pattern.compile("\\d+");
+                    Matcher m = p.matcher((CharSequence) obj);
+                    int[] iargs = new int[6];
+                    int i = 0;
+                    while (m.find()) {
+                        iargs[i++] = Integer.parseInt(m.group());
+                    }
+                    obj = String.format("%04d-%02d-%02d %02d:%02d:%02d", iargs[0], iargs[1], iargs[2], iargs[3], iargs[4], iargs[5]);
+                }
                 values.put(key, (String) obj);
             } else if (obj instanceof Integer) {
                 values.put(key, (Integer) obj);

@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.BaseColumns;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
@@ -12,10 +14,13 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.baidu.mapapi.SDKInitializer;
+import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.QueryInfosService;
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
@@ -55,13 +60,13 @@ public class MainActivity extends ActionBarActivity {
         mFragmentsMap.put(R.id.main_btn_chat, chatList);
         trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).hide(fixCar).hide(chatList).commit();
 
-        mMsgReceiver = new NewMessageBroadcastReceiver();
-        IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMsgReceiver, inf);
         setTitle("查看车辆");
 
         Intent i = new Intent(this, QueryInfosService.class);
         startService(i);
+
+
+        fixUnread();
     }
 
     @Override
@@ -76,6 +81,16 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        mMsgReceiver = new NewMessageBroadcastReceiver();
+        IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMsgReceiver, inf);
+    }
+
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMsgReceiver);
+        mMsgReceiver = null;
+        super.onPause();
     }
 
     private static final int REQUEST_SCAN_VEHICLE = 0x1000;
@@ -173,6 +188,29 @@ public class MainActivity extends ActionBarActivity {
     private class NewMessageBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            final Fragment frag = mFragmentsMap.get(mCurrentSelectId);
+            if (frag instanceof ContactlistFragment) {
+
+            } else {
+                fixUnread();
+            }
+        }
+    }
+
+    private void fixUnread() {
+        Cursor c = null;
+        try {
+            c = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s ==0", BaseColumns._ID, Message.TABLE, Message.STATE), null);
+            int count = c.getCount();
+            if (count > 0) {
+                TextView unread = (TextView) findViewById(R.id.unread_msg_number);
+                unread.setText(count);
+                unread.setVisibility(View.VISIBLE);
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
     }
 
