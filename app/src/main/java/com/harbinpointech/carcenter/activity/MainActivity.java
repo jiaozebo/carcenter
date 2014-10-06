@@ -1,7 +1,9 @@
 package com.harbinpointech.carcenter.activity;
 
+import android.app.*;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -11,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +29,9 @@ import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.HashMap;
 
 public class MainActivity extends ActionBarActivity {
@@ -52,8 +58,9 @@ public class MainActivity extends ActionBarActivity {
         Fragment map = new MapFragment();
         Fragment fixCar = Fragment.instantiate(this, FixCarFragment.class.getName(), null);
         Bundle args = new Bundle();
-        args.putString(LoginActivity.KEY_USER_NAME, getIntent().getStringExtra("username"));
-        args.putString(LoginActivity.KEY_PWD, getIntent().getStringExtra("password"));
+        Intent intent = getIntent();
+        args.putString(LoginActivity.KEY_USER_NAME, intent.getStringExtra("username"));
+        args.putString(LoginActivity.KEY_PWD, intent.getStringExtra("password"));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
@@ -67,15 +74,16 @@ public class MainActivity extends ActionBarActivity {
 
 
         fixUnread();
-    }
 
-    @Override
-    protected void onDestroy() {
-        if (mMsgReceiver != null) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(mMsgReceiver);
-            mMsgReceiver = null;
+        String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER);
+        if (!TextUtils.isEmpty(user)) {
+            boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
+//            new AlertDialog.Builder(this).setTitle(getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).show();
+        } else {
+            user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER);
+            if (!TextUtils.isEmpty(user))
+                answerAddRequest(this, user);
         }
-        super.onDestroy();
     }
 
     @Override
@@ -83,6 +91,8 @@ public class MainActivity extends ActionBarActivity {
         super.onResume();
         mMsgReceiver = new NewMessageBroadcastReceiver();
         IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);
+        inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND_ANSWERED);
+        inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND);
         LocalBroadcastManager.getInstance(this).registerReceiver(mMsgReceiver, inf);
     }
 
@@ -188,13 +198,55 @@ public class MainActivity extends ActionBarActivity {
     private class NewMessageBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            final Fragment frag = mFragmentsMap.get(mCurrentSelectId);
-            if (frag instanceof ContactlistFragment) {
+            if (intent.getAction().equals(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED)) {
+                final Fragment frag = mFragmentsMap.get(mCurrentSelectId);
+                if (frag instanceof ContactlistFragment) {
 
+                } else {
+                    fixUnread();
+                }
+            }
+            handleOnReceive(intent, MainActivity.this);
+        }
+    }
+
+    public static void handleOnReceive(Intent intent, Activity activity) {
+        if (intent.getAction().equals(QueryInfosService.ACTION_REQUEST_FRIEND)) {
+            String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER);
+            if (!TextUtils.isEmpty(user)) {
+                answerAddRequest(activity, user);
+            }
+        } else if (intent.getAction().equals(QueryInfosService.ACTION_REQUEST_FRIEND_ANSWERED)) {
+            String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER);
+            if (!TextUtils.isEmpty(user)) {
+                boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
+                new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).show();
             } else {
-                fixUnread();
+
             }
         }
+    }
+
+    private static void answerAddRequest(Activity activity, final String user) {
+        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, final int which) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            WebHelper.sendMessage(which == DialogInterface.BUTTON_POSITIVE ? Message.MSG_ADD_FRIEND_ACCEPT : Message.MSG_ADD_FRIEND_REJECT, false, user);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+
+            }
+        };
+        new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s 请求添加您为好友", user)).setPositiveButton("接收", listener).setNegativeButton("拒绝", listener).show();
     }
 
     private void fixUnread() {
@@ -204,7 +256,7 @@ public class MainActivity extends ActionBarActivity {
             int count = c.getCount();
             if (count > 0) {
                 TextView unread = (TextView) findViewById(R.id.unread_msg_number);
-                unread.setText(count);
+                unread.setText(String.valueOf(count));
                 unread.setVisibility(View.VISIBLE);
             }
         } finally {

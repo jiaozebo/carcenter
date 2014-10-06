@@ -63,7 +63,7 @@ public class AddContactActivity extends BaseActivity{
 		if (getString(R.string.button_search).equals(saveText)) {
 			toAddUsername = name;
 			if(TextUtils.isEmpty(name)) {
-				startActivity(new Intent(this, AlertDialog.class).putExtra("msg", "请输入用户名"));
+//				startActivity(new Intent(this, AlertDialog.class).putExtra("msg", "请输入用户名"));
 				return;
 			}
 			

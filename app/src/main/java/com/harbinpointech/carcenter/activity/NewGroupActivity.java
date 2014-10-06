@@ -64,9 +64,9 @@ public class NewGroupActivity extends BaseActivity {
 	public void save(View v) {
 		String name = groupNameEditText.getText().toString();
 		if (TextUtils.isEmpty(name)) {
-			Intent intent = new Intent(this, AlertDialog.class);
-			intent.putExtra("msg", "群组名称不能为空");
-			startActivity(intent);
+//			Intent intent = new Intent(this, AlertDialog.class);
+//			intent.putExtra("msg", "群组名称不能为空");
+//			startActivity(intent);
 		} else {
 			// 进通讯录选人
 		}

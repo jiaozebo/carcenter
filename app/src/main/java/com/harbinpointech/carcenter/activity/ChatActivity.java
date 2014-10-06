@@ -49,8 +49,10 @@ public class ChatActivity extends ActionBarActivity {
     public static final String SENDER_ID = Message.SENDER;
     public static final String SENDER_NAME = "name";
     public static final String USER_ID = "my_id";
+    public static final String IS_GROUP_CHAT = "IS_GROUP_CHAT";
     private String mOtherSideId;
     private String mMyId;
+    private boolean mIsGroup;
     private Cursor mCursor;
     private ListView mListView;
 
@@ -139,11 +141,11 @@ public class ChatActivity extends ActionBarActivity {
             return 0;
         } else {
             try {
-                int result = WebHelper.sendMessage(text, mOtherSideId);
+                int result = WebHelper.sendMessage(text, mIsGroup, mOtherSideId);
                 if (result == 0) {
                     SQLiteDatabase db = CarApp.lockDataBase();
                     ContentValues cv = new ContentValues();
-                    cv.put(Message.STATE, 0);
+                    cv.put(Message.STATE, 1);
                     db.update(Message.TABLE, cv, BaseColumns._ID + "=?", new String[]{String.valueOf(id)});
                 }
             } catch (JSONException e) {
@@ -167,6 +169,7 @@ public class ChatActivity extends ActionBarActivity {
         if (TextUtils.isEmpty(mMyId)) {
             mMyId = "";
         }
+        mIsGroup = getIntent().getBooleanExtra(IS_GROUP_CHAT, false);
         mListView = (ListView) findViewById(android.R.id.list);
         mListView.setEmptyView(findViewById(android.R.id.empty));
 
@@ -174,7 +177,7 @@ public class ChatActivity extends ActionBarActivity {
 
         initNotifyReceiver();
 
-        MessageAdapter ma = new MessageAdapter(ChatActivity.this, null, mOtherSideId);
+        MessageAdapter ma = new MessageAdapter(ChatActivity.this, null, mOtherSideId, mIsGroup);
         mListView.setAdapter(ma);
 
 
@@ -199,6 +202,8 @@ public class ChatActivity extends ActionBarActivity {
      */
     private void initNotifyReceiver() {
         IntentFilter inf = new IntentFilter(QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED);
+        inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND_ANSWERED);
+        inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND);
         mLocalReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -216,6 +221,8 @@ public class ChatActivity extends ActionBarActivity {
                         e.printStackTrace();
                     }
                 }
+
+                MainActivity.handleOnReceive(intent, ChatActivity.this);
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mLocalReceiver, inf);

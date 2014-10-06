@@ -120,23 +120,37 @@ public class WebHelper {
         }
     }
 
+
+    public static int getAllGroups(JSONObject[] groups) throws IOException, JSONException {
+        int result = doPost(URL + "GetMessageGroup", groups);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
     /**
      * @param message
-     * @param users
-     * @return
+     * @param isGroup
+     * @param users   @return
      * @throws JSONException
      * @throws IOException
      */
-    public static int sendMessage(String message, String... users) throws JSONException, IOException {
+    public static int sendMessage(String message, boolean isGroup, String... users) throws JSONException, IOException {
         JSONObject json = new JSONObject();
         json.put("message", new String(message.getBytes(), "ISO8859-1"));
-        JSONArray ja = new JSONArray();
-        for (String user : users) {
+        if (!isGroup) {
+            JSONArray ja = new JSONArray();
+            for (String user : users) {
 //            ja.put(new JSONObject(String.format("{\"%s\":\"%s\"}", "id", String.valueOf(user))));
-            ja.put(user);
+                ja.put(user);
+            }
+            json.put("userIDs", ja);
+        } else {
+            json.put("MessageGroupID", users[0]);
         }
-        json.put("userIDs", ja);
-        int result = doPost(URL + "SendMessage", new JSONObject[]{json});
+        int result = doPost(URL + (isGroup ? "SendGroupMessage" : "SendMessage"), new JSONObject[]{json});
         if (result == 200) {
             return 0;
         } else {
@@ -255,7 +269,7 @@ public class WebHelper {
 //            ps.println(jsonStr);
 //            ps.close();
             json[0] = new JSONObject(jsonStr);
-            Log.w("WEB_HELPER_response", json[0].toString());
+            Log.w("WEB_HELPER_response", url + ", " + json[0].toString());
         }
         return sl.getStatusCode();
     }

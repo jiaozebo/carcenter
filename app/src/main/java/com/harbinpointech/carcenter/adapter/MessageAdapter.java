@@ -19,6 +19,7 @@ import android.widget.TextView.BufferType;
 import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.Contacts;
+import com.harbinpointech.carcenter.data.Group;
 import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.utils.SmileUtils;
 
@@ -47,7 +48,7 @@ public class MessageAdapter extends CursorAdapter {
     public static final String VOICE_DIR = "chat/audio/";
     public static final String VIDEO_DIR = "chat/video";
     private final String mOtherSideIndex;
-
+    private boolean mIsGroup;
     private String mOtherSideName;
     private LayoutInflater mInflater;
     private Activity activity;
@@ -57,14 +58,19 @@ public class MessageAdapter extends CursorAdapter {
 
     private Context context;
 
-    public MessageAdapter(Context context, Cursor c, String otherSideIndex) {
+    public MessageAdapter(Context context, Cursor c, String otherSideIndex, boolean isGroup) {
         super(context, c, true);
+        mIsGroup = isGroup;
         mOtherSideIndex = otherSideIndex;
         Cursor cursor = null;
         try {
-            cursor = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s = ?", Contacts.NAME, Contacts.TABLE, Contacts.ID), new String[]{mOtherSideIndex});
+            if (isGroup) {
+                cursor = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s = ?", Group.NAME, Group.TABLE, Group.ID), new String[]{mOtherSideIndex});
+            } else {
+                cursor = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s = ?", Contacts.NAME, Contacts.TABLE, Contacts.ID), new String[]{mOtherSideIndex});
+            }
             if (cursor.moveToFirst()) {
-                mOtherSideName = cursor.getString(cursor.getColumnIndex(Contacts.NAME));
+                mOtherSideName = cursor.getString(cursor.getColumnIndex(isGroup ? Group.NAME : Contacts.NAME));
             }
         } catch (Exception e) {
             e.printStackTrace();

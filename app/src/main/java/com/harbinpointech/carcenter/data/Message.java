@@ -8,7 +8,27 @@ import android.provider.BaseColumns;
  */
 public class Message implements BaseColumns {
 
+
+
+    //    public static final String MSG_ADD_FRIEND = "[][][][]";
+    public static final String MSG_ADD_FRIEND = "MSG_ADD_FRIEND";
+    public static final String MSG_ADD_FRIEND_ACCEPT = "MSG_ADD_FRIEND_ACCEPT";
+    public static final String MSG_ADD_FRIEND_REJECT = "MSG_ADD_FRIEND_REJECT";
+
     /*
+
+
+    "__type": "ServiceMessage:#WcfService.Entity",
+            "Message1": "就开导开导",
+            "SendID": "1",
+            "MessageGroupID": null,
+            "ReceiveID": "75",
+            "MessageGroup": null,
+            "MessageCount": null,
+            "IsGroupMessage": "N",
+            "SendTime": "2014/10/5 23:43:56",
+            "ID": "109",
+            "ReceiveTime": null
     *
     * "__type": "ServiceMessage:#WcfService.Entity",
             "Message1": "??",
@@ -32,6 +52,7 @@ public class Message implements BaseColumns {
     public static final String DATETIME = "SendTime";
     public static final String ID = "ID";
     public static final String RECEIVE_TIME = "ReceiveTime";
+    public static final String ISGROUP = "IsGroupMessage";
     /**
      * -1表示正在发送
      */
@@ -45,6 +66,7 @@ public class Message implements BaseColumns {
                                 "%s INTEGER, " +
                                 "%s INTEGER, " +
                                 "%s VARCHAR(10), " +
+                                "%s VARCHAR(10), " +
                                 "%s VARCHAR(50), " +
                                 "%s VARCHAR(50), " +
                                 "%s VARCHAR(1024), " +
@@ -55,6 +77,7 @@ public class Message implements BaseColumns {
                         RECEIVER,
                         ID,
                         GROUPID,
+                        ISGROUP,
                         GROUP,
                         MESSAGE_COUNT,
                         CONTENT,

@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
 import com.harbinpointech.carcenter.data.Contacts;
+import com.harbinpointech.carcenter.data.Group;
 import com.harbinpointech.carcenter.data.Message;
 
 import org.json.JSONArray;
@@ -28,7 +29,7 @@ import java.util.regex.Pattern;
 public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String DBNAME = "carcenter.db";
-    private static final int VERSION = 5;
+    private static final int VERSION = 11;
     private static final SimpleDateFormat sSDFSource = new SimpleDateFormat("yyyy/M/d  HH:mm:ss");
     private static final SimpleDateFormat sSDFDest = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
 
@@ -40,46 +41,79 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         Message.createTable(db);
         Contacts.createTable(db);
+        Group.createTable(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(String.format("drop table if exists '%s'", Contacts.TABLE));
         db.execSQL(String.format("drop table if exists '%s'", Message.TABLE));
+        db.execSQL(String.format("drop table if exists '%s'", Group.TABLE));
         onCreate(db);
     }
 
-    public static void insert(String table, JSONArray array) throws JSONException {
+    public static int insert(String table, JSONArray array) throws JSONException {
         SQLiteDatabase db = CarApp.lockDataBase();
         Cursor c = null;
         ContentValues cv = new ContentValues();
         try {
             db.beginTransaction();
+            int count = 0;
+            A:
             for (int i = 0; i < array.length(); i++) {
                 JSONObject chat = array.getJSONObject(i);
+                if (chat == null) {
+                    continue;
+                }
                 cv.clear();
                 chat.remove("__type");
 
                 json2contentValue(chat, cv);
-                if (cv.containsKey(Contacts.ID)) {
-                    Integer index = cv.getAsInteger(Contacts.ID);
-                    if (index != null) {
-                        c = db.query(table, new String[]{BaseColumns._ID}, Contacts.ID + " = ?", new String[]{String.valueOf(index)}, null, null, null);
-                        if (c.moveToFirst()) {
-                            db.update(table, cv, BaseColumns._ID + "=?", new String[]{c.getString(0)});
+                if (table.equals(Contacts.TABLE) || table.equals(Message.TABLE)) {
+                    if (cv.containsKey(Contacts.ID)) {
+                        Integer index = cv.getAsInteger(Contacts.ID);
+                        if (index != null) {
+                            c = db.query(table, new String[]{BaseColumns._ID}, Contacts.ID + " = ?", new String[]{String.valueOf(index)}, null, null, null);
+                            if (c.moveToFirst()) {
+                                db.update(table, cv, BaseColumns._ID + "=?", new String[]{c.getString(0)});
+                                continue;
+                            }
+                        } else {
                             continue;
                         }
-                    } else {
+                    }
+                } else if (table.equals(Group.TABLE)) {
+                    Iterator<String> it = cv.keySet().iterator();
+                    while (it.hasNext()){
+                        String key = it.next();
+                        if (key.equals(Group.ID)) {
+                            Integer index = cv.getAsInteger(key);
+                            if (index != null) {
+                                // id 合法的才留着
+                                continue;
+                            } else {
+                                continue A;
+                            }
+                        } else if (key.equals(Group.NAME)) {
+                            continue;
+                        }
+                        it.remove();
+                    }
+                    c = db.query(table, new String[]{BaseColumns._ID}, Group.ID + " = ?", new String[]{String.valueOf(cv.getAsInteger(Group.ID))}, null, null, null);
+                    if (c.moveToFirst()) {
+                        db.update(table, cv, BaseColumns._ID + "=?", new String[]{c.getString(0)});
                         continue;
                     }
                 }
                 db.insertOrThrow(table, null, cv);
+                ++count;
             }
             db.setTransactionSuccessful();
+            return count;
         } finally {
             db.endTransaction();
-
         }
+
     }
 
     public static final void json2contentValue(JSONObject json, ContentValues values) throws JSONException {

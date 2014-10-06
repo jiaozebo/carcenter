@@ -22,8 +22,10 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,6 +45,8 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.LoginActivity;
 import com.harbinpointech.carcenter.data.Contacts;
+import com.harbinpointech.carcenter.data.Group;
+import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
@@ -62,8 +66,6 @@ public class ContactlistFragment extends ListFragment {
     private String mMyName;
     private String mMyIndex;
     private Cursor mCursor;
-    //    public static final String MSG_ADD_FRIEND = "[][][][]";
-    public static final String MSG_ADD_FRIEND = "[][][][]";
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -89,63 +91,70 @@ public class ContactlistFragment extends ListFragment {
         setListAdapter(new CursorAdapter(getActivity(), null, false) {
             @Override
             public View newView(Context context, Cursor cursor, ViewGroup parent) {
-                View convertView = getLayoutInflater(null).inflate(android.R.layout.simple_list_item_1, parent, false);
+                View convertView = getLayoutInflater(null).inflate(R.layout.contact_list_item, parent, false);
                 TextView text = (TextView) convertView.findViewById(android.R.id.text1);
                 text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
                 return convertView;
-            }jq
+            }
 
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
                 TextView text = (TextView) view.findViewById(android.R.id.text1);
                 text.setText(cursor.getString(cursor.getColumnIndex(Contacts.NAME)));
+
+                Cursor cc = CarApp.lockDataBase().rawQuery(String.format("select _id from %s where %s =0 and %s=%d", Message.TABLE, Message.STATE, Message.RECEIVER, cursor.getInt(cursor.getColumnIndex(Message.ID))), null);
+                if (cc.moveToFirst()) {
+                    TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
+                    unread.setVisibility(View.VISIBLE);
+                    unread.setText(String.valueOf(cc.getCount()));
+                }
             }
         });
-        new AsyncTask<Void, Integer, Integer>() {
-            JSONArray mUserSets;
+        final ListView listView = getListView();
+        new Thread("QUERY_CONTACTS") {
+            JSONArray mUserSets
+                    ,
+                    mGroupSets;
 
             @Override
-            protected Integer doInBackground(Void... params) {
+            public void run() {
                 try {
                     JSONObject[] users = new JSONObject[1];
                     int result = WebHelper.getAllUsers(users);
-                    mUserSets = users[0].getJSONArray("d");
-                    // 找到自己
-                    for (int i = 0; i < mUserSets.length(); i++) {
-                        JSONObject user = mUserSets.getJSONObject(i);
-                        if (mMyName.equals(user.getString("Name"))) {
-                            mMyIndex = user.getString(Contacts.ID);
-                            break;
-                        }
+                    if (result == 0) {
+                        mUserSets = users[0].getJSONArray("d");
+                        CarSQLiteOpenHelper.insert(Contacts.TABLE, mUserSets);
                     }
-                    CarSQLiteOpenHelper.insert(Contacts.TABLE, mUserSets);
-                    return 0;
+                    users[0] = null;
+                    result = WebHelper.getAllGroups(users);
+                    if (result == 0) {
+                        mGroupSets = users[0].getJSONArray("d");
+                        CarSQLiteOpenHelper.insert(Group.TABLE, mGroupSets);
+                    }
+                    listView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
+                                    , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
+                            Log.i(Contacts.TABLE, sql);
+                            mCursor = CarApp.lockDataBase().rawQuery(sql, null);
+                            CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
+                            cursorAdapter.changeCursor(mCursor);
+                        }
+                    });
                 } catch (JSONException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                return -1;
             }
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                mCursor = CarApp.lockDataBase().rawQuery(String.format("select * from %s where %s != '%s'", Contacts.TABLE, Contacts.NAME, mMyName), null);
-                CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
-                cursorAdapter.changeCursor(mCursor);
-            }
-
-            @Override
-            protected void onPostExecute(Integer result) {
-                super.onPostExecute(result);
-                if (result == 0) {
-                    mCursor = CarApp.lockDataBase().rawQuery(String.format("select * from %s where %s != '%s'", Contacts.TABLE, Contacts.NAME, mMyName), null);
-                    CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
-                    cursorAdapter.changeCursor(mCursor);
-                }
-            }
-        }.execute();
+        }.start();
+        String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
+                , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
+        Log.i(Contacts.TABLE, sql);
+        mCursor = CarApp.lockDataBase().rawQuery(sql, null);
+        CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
+        cursorAdapter.changeCursor(mCursor);
     }
 
 
@@ -158,6 +167,7 @@ public class ContactlistFragment extends ListFragment {
         // it is group chat
         intent.putExtra(ChatActivity.SENDER_ID, c.getString(c.getColumnIndex(Contacts.ID)));
         intent.putExtra(ChatActivity.SENDER_NAME, c.getString(c.getColumnIndex(Contacts.NAME)));
+        intent.putExtra(ChatActivity.IS_GROUP_CHAT, c.getInt(c.getColumnIndex(Group.ID)) != 0);
         startActivity(intent);
     }
 
@@ -238,7 +248,7 @@ public class ContactlistFragment extends ListFragment {
                         @Override
                         public void run() {
                             try {
-                                WebHelper.sendMessage(MSG_ADD_FRIEND, id);
+                                WebHelper.sendMessage(Message.MSG_ADD_FRIEND, false, id);
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {

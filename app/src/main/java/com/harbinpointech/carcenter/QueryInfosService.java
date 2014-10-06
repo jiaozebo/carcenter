@@ -1,5 +1,6 @@
 package com.harbinpointech.carcenter;
 
+import android.app.DownloadManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -12,6 +13,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.harbinpointech.carcenter.activity.ChatActivity;
+import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
 
@@ -24,7 +26,20 @@ import java.io.IOException;
 public class QueryInfosService extends Service {
 
     public static final String ACTION_NOTIFICATIONS_RECEIVED = "ACTION_NOTIFICATIONS_RECEIVED";
+    /**
+     * 表示接收到了添加好友响应
+     */
+    public static final String ACTION_REQUEST_FRIEND_ANSWERED = "ACTION_REQUEST_FRIEND_ANSWERED";
     public static final String EXTRA_CHAT_ARRAY = "EXTRA_CHAT_ARRAY";
+    /**
+     * 表示接收到了添加好友请求
+     */
+    public static final String ACTION_REQUEST_FRIEND = "ACTION_REQUEST_FRIEND";
+
+    public static final String EXTRA_REQUEST_FRIEND_ANSWERED_USER = "EXTRA_REQUEST_FRIEND_ANSWERED_USER";
+    public static final String EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED = "EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED";
+    public static final String EXTRA_REQUEST_FRIEND_USER = "EXTRA_REQUEST_FRIEND_USER";
+
     private Thread mQueryThread;
 
     @Override
@@ -45,8 +60,64 @@ public class QueryInfosService extends Service {
                             int result = WebHelper.recvMessage(params);
                             if (result == 0) {
                                 JSONArray array = params[0].getJSONArray("d");
-                                if (array.length() > 0) {
-                                    CarSQLiteOpenHelper.insert(Message.TABLE, array);
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject message = array.getJSONObject(i);
+                                    String content = message.getString(Message.CONTENT);
+                                    String user = message.getString(Message.SENDER);
+                                    if (Message.MSG_ADD_FRIEND_ACCEPT.equals(content) || Message.MSG_ADD_FRIEND_REJECT.equals(content)) {
+                                        array.put(i, null);
+                                        Intent intent = new Intent(ACTION_REQUEST_FRIEND_ANSWERED);
+                                        intent.putExtra(EXTRA_REQUEST_FRIEND_ANSWERED_USER, user);
+                                        intent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, Message.MSG_ADD_FRIEND_ACCEPT.equals(content));
+                                        boolean bResult = LocalBroadcastManager.getInstance(QueryInfosService.this).sendBroadcast(intent);
+                                        if (!bResult) {
+                                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                                            Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
+
+                                            activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER, user);
+                                            activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, Message.MSG_ADD_FRIEND_ACCEPT.equals(content));
+                                            activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+
+                                            PendingIntent pi = PendingIntent.getActivity(QueryInfosService.this, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
+                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
+                                                    .setSmallIcon(R.drawable.icon_account)
+                                                    .setContentTitle(getString(R.string.app_name))
+                                                    .setContentText(String.format("%s %s了您的请求", user, Message.MSG_ADD_FRIEND_ACCEPT.equals(content) ? "接受" : "拒绝"))
+                                                    .setSound(alarmSound)
+                                                    .setAutoCancel(true)
+                                                    .setContentIntent(pi);
+                                            nm.notify(0, builder.build());
+                                        }
+                                    } else if (Message.MSG_ADD_FRIEND.equals(content)) {
+                                        array.put(i, null);
+                                        Intent intent = new Intent(ACTION_REQUEST_FRIEND);
+                                        intent.putExtra(EXTRA_REQUEST_FRIEND_USER, user);
+                                        boolean bResult = LocalBroadcastManager.getInstance(QueryInfosService.this).sendBroadcast(intent);
+                                        if (!bResult) {
+                                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                            Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                                            Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
+
+                                            activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER, user);
+                                            activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+
+                                            PendingIntent pi = PendingIntent.getActivity(QueryInfosService.this, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
+                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
+                                                    .setSmallIcon(R.drawable.icon_account)
+                                                    .setContentTitle(getString(R.string.app_name))
+                                                    .setContentText(String.format("%s请求添加您为好友", user))
+                                                    .setSound(alarmSound)
+                                                    .setAutoCancel(true)
+                                                    .setContentIntent(pi);
+                                            nm.notify(0, builder.build());
+                                        }
+                                    }
+                                }
+                                int size = CarSQLiteOpenHelper.insert(Message.TABLE, array);
+                                if (size > 0) {
                                     Intent i = new Intent(ACTION_NOTIFICATIONS_RECEIVED);
                                     i.putExtra(EXTRA_CHAT_ARRAY, array.toString());
                                     boolean bResult = LocalBroadcastManager.getInstance(QueryInfosService.this).sendBroadcast(i);
