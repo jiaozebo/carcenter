@@ -105,6 +105,17 @@ public class WebHelper {
         }
     }
 
+    public static int getUser(JSONObject[] params, String username) throws JSONException, IOException {
+        params[0] = new JSONObject();
+        params[0].put("name", username);
+        int result = doPost(URL + "GetUser", params);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
     /**
      * @param params
      * @return
@@ -123,6 +134,17 @@ public class WebHelper {
 
     public static int getAllGroups(JSONObject[] groups) throws IOException, JSONException {
         int result = doPost(URL + "GetMessageGroup", groups);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
+    public static int getGroupMembers(JSONObject[] members, int groupID) throws IOException, JSONException {
+        members[0] = new JSONObject();
+        members[0].put("GroupID", groupID);
+        int result = doPost(URL + "GetGroupMembers", members);
         if (result == 200) {
             return 0;
         } else {
@@ -173,6 +195,25 @@ public class WebHelper {
         obj.put("name", name);
         JSONObject[] params = new JSONObject[]{obj};
         int result = doPost(URL + "CreateMessageGroup", params);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
+    public static int addMembers(String messageGroupID, String... userID) throws JSONException, IOException {
+        JSONObject json = new JSONObject();
+        json.put("messageGroupID", messageGroupID);
+
+        JSONArray ja = new JSONArray();
+        for (String user : userID) {
+//            ja.put(new JSONObject(String.format("{\"%s\":\"%s\"}", "id", String.valueOf(user))));
+            ja.put(user);
+        }
+        json.put("userID", ja);
+
+        int result = doPost(URL + "AddMembers", new JSONObject[]{json});
         if (result == 200) {
             return 0;
         } else {
@@ -339,4 +380,5 @@ public class WebHelper {
 
     public static void mobileGetRepaireRecords2() {
     }
+
 }

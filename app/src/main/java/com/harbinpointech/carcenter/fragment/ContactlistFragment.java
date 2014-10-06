@@ -15,6 +15,8 @@ package com.harbinpointech.carcenter.fragment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,12 +28,16 @@ import android.provider.BaseColumns;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -55,6 +61,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * 联系人列表页
@@ -102,7 +109,7 @@ public class ContactlistFragment extends ListFragment {
                 TextView text = (TextView) view.findViewById(android.R.id.text1);
                 text.setText(cursor.getString(cursor.getColumnIndex(Contacts.NAME)));
 
-                Cursor cc = CarApp.lockDataBase().rawQuery(String.format("select _id from %s where %s =0 and %s=%d", Message.TABLE, Message.STATE, Message.RECEIVER, cursor.getInt(cursor.getColumnIndex(Message.ID))), null);
+                Cursor cc = CarApp.lockDataBase().rawQuery(String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, cursor.getInt(cursor.getColumnIndex(Message.ID))), null);
                 if (cc.moveToFirst()) {
                     TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
                     unread.setVisibility(View.VISIBLE);
@@ -177,6 +184,19 @@ public class ContactlistFragment extends ListFragment {
     }
 
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+//        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.add(0, R.id.mdy_nick, 0, "修改昵称");
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        Cursor c = (Cursor) getListView().getItemAtPosition(info.position);
+        int groupID = c.getInt(c.getColumnIndex(Group.ID));
+        if (groupID != 0) {
+            menu.add(0, R.id.view_group_member, 0, "查看群成员");
+            menu.add(0, R.id.add_group_member, 0, "添加群成员");
+        }
+    }
+
     //
     @Override
     public boolean onContextItemSelected(MenuItem item) {
@@ -223,6 +243,160 @@ public class ContactlistFragment extends ListFragment {
                     }.execute();
                 }
             }).setNegativeButton("取消", null).show();
+        } else if (item.getItemId() == R.id.view_group_member) {
+            final ProgressDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍候...", false, false);
+            Cursor c = (Cursor) getListView().getItemAtPosition(info.position);
+            final int groupID = c.getInt(c.getColumnIndex(Group.ID));
+            new Thread("QUERY_GROUP_MEMBER") {
+                @Override
+                public void run() {
+                    try {
+                        final JSONObject[] members = new JSONObject[1];
+                        final int result = WebHelper.getGroupMembers(members, groupID);
+                        getListView().post(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                if (result == 0) {
+//                            JSONObject member = members[0];
+                                    JSONArray member = null;
+                                    try {
+                                        member = members[0].getJSONArray("d");
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    if (member != null && member.length() > 0) {
+                                        final JSONArray fmember = member;
+                                        BaseAdapter adapter = new BaseAdapter() {
+                                            @Override
+                                            public int getCount() {
+                                                return fmember.length();
+                                            }
+
+                                            @Override
+                                            public Object getItem(int position) {
+                                                try {
+                                                    return fmember.getJSONObject(position);
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                return null;
+                                            }
+
+                                            @Override
+                                            public long getItemId(int position) {
+                                                return position;
+                                            }
+
+                                            @Override
+                                            public View getView(int position, View convertView, ViewGroup parent) {
+                                                if (convertView == null) {
+                                                    convertView = getLayoutInflater(null).inflate(android.R.layout.simple_list_item_1, parent, false);
+                                                }
+                                                TextView text = (TextView) convertView.findViewById(android.R.id.text1);
+                                                JSONObject item = (JSONObject) getItem(position);
+                                                try {
+                                                    text.setText(item.getString("Name"));
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                return convertView;
+                                            }
+                                        };
+                                        new AlertDialog.Builder(getActivity()).setAdapter(adapter, null).show();
+                                    } else {
+                                        Toast.makeText(getActivity(), "未获取到群成员", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    dlg.dismiss();
+                }
+            }.start();
+        } else if (item.getItemId() == R.id.add_group_member) {
+            final ProgressDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍候...", false, false);
+            Cursor c = (Cursor) getListView().getItemAtPosition(info.position);
+            final int groupID = c.getInt(c.getColumnIndex(Group.ID));
+            new Thread("QUERY_GROUP_MEMBER") {
+                @Override
+                public void run() {
+                    try {
+                        final JSONObject[] members = new JSONObject[1];
+                        final int result = WebHelper.getGroupMembers(members, groupID);
+                        final StringBuffer sb = new StringBuffer();
+                        if (result == 0) {
+                            try {
+                                JSONArray member = members[0].getJSONArray("d");
+                                for (int i = 0; i < member.length(); i++) {
+                                    if (i != 0) {
+                                        sb.append(',');
+                                    }
+                                    JSONObject m = member.getJSONObject(i);
+                                    sb.append(m.getString(Contacts.ID));
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        getListView().post(new Runnable() {
+                            @Override
+                            public void run() {
+//                                final Cursor cursor = CarApp.lockDataBase().rawQuery("select _id, ID, Name,case when ID in (?) then 1 else 0 end as INGROUP from Contacts", new String[]{sb.toString()});
+                                final Cursor cursor = CarApp.lockDataBase().rawQuery(String.format("select _id, ID, Name, 0 as INGROUP from Contacts where ID not in(%s)", sb.toString()), null);
+
+                                final ArrayList<String> newMems = new ArrayList<String>();
+                                new AlertDialog.Builder(getActivity()).setMultiChoiceItems(cursor, "INGROUP", "Name", new DialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                        cursor.moveToPosition(which);
+//                                        ContentValues cv = new ContentValues();
+//                                        cv.put("INGROUP", isChecked ? 1 : 0);
+//                                        CarApp.lockDataBase().update("GROUP_MEMBER", cv, "_id=?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(BaseColumns._ID)))});
+                                        String cid = cursor.getString(cursor.getColumnIndex(Contacts.ID));
+                                        if (isChecked) {
+                                            newMems.add(cid);
+                                        } else {
+                                            newMems.remove(cid);
+                                        }
+                                    }
+                                }).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        if (!newMems.isEmpty()) {
+                                            final String[] ids = new String[newMems.size()];
+                                            newMems.toArray(ids);
+                                            dlg.show();
+                                            new Thread("ADD_GROUPS") {
+                                                @Override
+                                                public void run() {
+                                                    try {
+                                                        WebHelper.addMembers(String.valueOf(groupID), ids);
+                                                    } catch (JSONException e) {
+                                                        e.printStackTrace();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    dlg.dismiss();
+                                                }
+                                            }.start();
+                                        }
+                                    }
+                                }).setNegativeButton("取消", null).show();
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    dlg.dismiss();
+                }
+            }.start();
         }
         return true;
     }

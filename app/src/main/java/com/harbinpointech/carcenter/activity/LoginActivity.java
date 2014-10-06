@@ -18,6 +18,7 @@ import com.harbinpointech.carcenter.util.AsyncTask;
 import com.harbinpointech.carcenter.utils.CommonUtils;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -94,7 +95,14 @@ public class LoginActivity extends BaseActivity {
                 @Override
                 protected Integer doInBackground(Void... params) {
                     try {
-                        return WebHelper.login(username, password);
+                        int result =  WebHelper.login(username, password);
+                        if (result == 0){
+                            JSONObject []p = new JSONObject[1];
+                            result = WebHelper.getUser(p, username);
+                            if (result == 0){
+
+                            }
+                        }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
@@ -127,6 +135,7 @@ public class LoginActivity extends BaseActivity {
                         Intent i = new Intent(LoginActivity.this, MainActivity.class);
                         i.putExtra("username", username);
                         i.putExtra("password", password);
+                        i.putExtra("index", 10);
                         startActivity(i);
                         finish();
                         return;
