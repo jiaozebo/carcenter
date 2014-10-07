@@ -71,7 +71,7 @@ public class ContactlistFragment extends ListFragment {
 
     private SharedPreferences mPref;
     private String mMyName;
-    private String mMyIndex;
+    private int mMyIndex;
     private Cursor mCursor;
 
     @Override
@@ -90,6 +90,7 @@ public class ContactlistFragment extends ListFragment {
         setHasOptionsMenu(true);
 
         mMyName = getArguments().getString(LoginActivity.KEY_USER_NAME);
+        mMyIndex = getArguments().getInt(LoginActivity.KEY_USER_INDEX);
         super.onActivityCreated(savedInstanceState);
         mPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
@@ -108,8 +109,10 @@ public class ContactlistFragment extends ListFragment {
             public void bindView(View view, Context context, Cursor cursor) {
                 TextView text = (TextView) view.findViewById(android.R.id.text1);
                 text.setText(cursor.getString(cursor.getColumnIndex(Contacts.NAME)));
-
-                Cursor cc = CarApp.lockDataBase().rawQuery(String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, cursor.getInt(cursor.getColumnIndex(Message.ID))), null);
+                boolean isGroup = cursor.getInt(cursor.getColumnIndex(Group.ID)) != 0;
+                String sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
+                Log.i("SQL", sql);
+                Cursor cc = CarApp.lockDataBase().rawQuery(sql, null);
                 if (cc.moveToFirst()) {
                     TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
                     unread.setVisibility(View.VISIBLE);
@@ -143,7 +146,7 @@ public class ContactlistFragment extends ListFragment {
                         public void run() {
                             String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
                                     , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
-                            Log.i(Contacts.TABLE, sql);
+                            Log.i("SQL", sql);
                             mCursor = CarApp.lockDataBase().rawQuery(sql, null);
                             CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
                             cursorAdapter.changeCursor(mCursor);
@@ -158,7 +161,7 @@ public class ContactlistFragment extends ListFragment {
         }.start();
         String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
                 , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
-        Log.i(Contacts.TABLE, sql);
+        Log.i("SQL", sql);
         mCursor = CarApp.lockDataBase().rawQuery(sql, null);
         CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
         cursorAdapter.changeCursor(mCursor);
@@ -410,7 +413,7 @@ public class ContactlistFragment extends ListFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add) {
             final EditText userEt = new EditText(getActivity());
-            userEt.setHint("请输入对方的ID");
+            userEt.setHint("请输入对方的用户名");
             new AlertDialog.Builder(getActivity()).setPositiveButton("确定", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -418,18 +421,37 @@ public class ContactlistFragment extends ListFragment {
                     if (TextUtils.isEmpty(id)) {
                         return;
                     }
+                    final AlertDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍等...", false, false);
                     new Thread() {
                         @Override
                         public void run() {
                             try {
-                                WebHelper.sendMessage(Message.MSG_ADD_FRIEND, false, id);
+                                JSONObject[] p = new JSONObject[1];
+                                int result = WebHelper.getLoginUser(p, id);
+                                if (result == 0) {
+                                    JSONObject userInfo = p[0].getJSONObject("d");
+                                    int mUserIdx = userInfo.getInt(Contacts.ID);
+                                    WebHelper.sendMessage(Message.MSG_ADD_FRIEND, false, String.valueOf(mUserIdx));
+                                } else {
+                                    getListView().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Activity activity = getActivity();
+                                            if (activity != null) {
+                                                Toast.makeText(activity.getApplicationContext(), "您查询的用户不存在或查询未成功", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                            dlg.dismiss();
                         }
                     }.start();
+
                 }
             }).setTitle("添加好友").setNegativeButton("取消", null).setView(userEt).show();
         }

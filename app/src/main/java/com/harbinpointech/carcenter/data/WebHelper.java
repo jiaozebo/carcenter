@@ -105,10 +105,10 @@ public class WebHelper {
         }
     }
 
-    public static int getUser(JSONObject[] params, String username) throws JSONException, IOException {
+    public static int getLoginUser(JSONObject[] params, String username) throws JSONException, IOException {
         params[0] = new JSONObject();
         params[0].put("name", username);
-        int result = doPost(URL + "GetUser", params);
+        int result = doPost(URL + "GetLoginUser", params);
         if (result == 200) {
             return 0;
         } else {

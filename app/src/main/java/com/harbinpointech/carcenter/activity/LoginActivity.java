@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.harbinpointech.carcenter.R;
+import com.harbinpointech.carcenter.data.Contacts;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 import com.harbinpointech.carcenter.utils.CommonUtils;
@@ -29,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 public class LoginActivity extends BaseActivity {
     public static final String KEY_USER_NAME = "key_user_name";
     public static final String KEY_PWD = "key_pwd";
+    public static final String KEY_USER_INDEX = "key_user_idx";
     private EditText usernameEditText;
     private EditText passwordEditText;
 
@@ -39,9 +41,11 @@ public class LoginActivity extends BaseActivity {
         if (WebHelper.hasLogined()) {
             String username = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_USER_NAME, null);
             String password = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_PWD, null);
+            int userIdx = PreferenceManager.getDefaultSharedPreferences(this).getInt(KEY_USER_INDEX, 0);
             Intent i = new Intent(LoginActivity.this, MainActivity.class);
-            i.putExtra("username", username);
-            i.putExtra("password", password);
+            i.putExtra(KEY_USER_NAME, username);
+            i.putExtra(KEY_PWD, password);
+            i.putExtra(KEY_USER_INDEX, userIdx);
             startActivity(i);
             finish();
         }
@@ -91,18 +95,21 @@ public class LoginActivity extends BaseActivity {
 
             AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
                 public ProgressDialog mProgress;
+                int mUserIdx = 0;
 
                 @Override
                 protected Integer doInBackground(Void... params) {
                     try {
-                        int result =  WebHelper.login(username, password);
-                        if (result == 0){
-                            JSONObject []p = new JSONObject[1];
-                            result = WebHelper.getUser(p, username);
-                            if (result == 0){
-
+                        int result = WebHelper.login(username, password);
+                        if (result == 0) {
+                            JSONObject[] p = new JSONObject[1];
+                            result = WebHelper.getLoginUser(p, username);
+                            if (result == 0) {
+                                JSONObject userInfo = p[0].getJSONObject("d");
+                                mUserIdx = userInfo.getInt(Contacts.ID);
                             }
                         }
+                        return result;
                     } catch (JSONException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
@@ -127,15 +134,15 @@ public class LoginActivity extends BaseActivity {
                     super.onPostExecute(integer);
 
                     if (integer == 0) {
-                        PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).edit().putString(KEY_USER_NAME, username).putString(KEY_PWD, password).commit();
+                        PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).edit().putString(KEY_USER_NAME, username).putString(KEY_PWD, password).putInt(KEY_USER_INDEX, mUserIdx).commit();
 //                        PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).getString(KEY_PWD, null));
 
                         // 如果用户名密码都有，直接进入主页面
                         mProgress.dismiss();
                         Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                        i.putExtra("username", username);
-                        i.putExtra("password", password);
-                        i.putExtra("index", 10);
+                        i.putExtra(KEY_USER_NAME, username);
+                        i.putExtra(KEY_PWD, password);
+                        i.putExtra(KEY_USER_INDEX, mUserIdx);
                         startActivity(i);
                         finish();
                         return;

@@ -14,6 +14,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -59,8 +60,9 @@ public class MainActivity extends ActionBarActivity {
         Fragment fixCar = Fragment.instantiate(this, FixCarFragment.class.getName(), null);
         Bundle args = new Bundle();
         Intent intent = getIntent();
-        args.putString(LoginActivity.KEY_USER_NAME, intent.getStringExtra("username"));
-        args.putString(LoginActivity.KEY_PWD, intent.getStringExtra("password"));
+        args.putString(LoginActivity.KEY_USER_NAME, intent.getStringExtra(LoginActivity.KEY_USER_NAME));
+        args.putString(LoginActivity.KEY_PWD, intent.getStringExtra(LoginActivity.KEY_PWD));
+        args.putInt(LoginActivity.KEY_PWD, intent.getIntExtra(LoginActivity.KEY_USER_INDEX, 0));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
@@ -252,7 +254,9 @@ public class MainActivity extends ActionBarActivity {
     private void fixUnread() {
         Cursor c = null;
         try {
-            c = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s ==0", BaseColumns._ID, Message.TABLE, Message.STATE), null);
+            String sql = String.format("select %s from %s where %s =0", BaseColumns._ID, Message.TABLE, Message.STATE);
+            Log.i("SQL", sql);
+            c = CarApp.lockDataBase().rawQuery(sql, null);
             int count = c.getCount();
             if (count > 0) {
                 TextView unread = (TextView) findViewById(R.id.unread_msg_number);
