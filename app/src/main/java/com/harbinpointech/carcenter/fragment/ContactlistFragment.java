@@ -325,6 +325,7 @@ public class ContactlistFragment extends ListFragment {
             final ProgressDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍候...", false, false);
             Cursor c = (Cursor) getListView().getItemAtPosition(info.position);
             final int groupID = c.getInt(c.getColumnIndex(Group.ID));
+            final String groupName = c.getString(c.getColumnIndex(Contacts.NAME));
             new Thread("QUERY_GROUP_MEMBER") {
                 @Override
                 public void run() {
@@ -378,7 +379,7 @@ public class ContactlistFragment extends ListFragment {
                                                 @Override
                                                 public void run() {
                                                     try {
-                                                        WebHelper.addMembers(String.valueOf(groupID), ids);
+                                                        WebHelper.addMembers(String.valueOf(groupID), groupName, ids);
                                                     } catch (JSONException e) {
                                                         e.printStackTrace();
                                                     } catch (IOException e) {

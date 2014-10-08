@@ -202,9 +202,10 @@ public class WebHelper {
         }
     }
 
-    public static int addMembers(String messageGroupID, String... userID) throws JSONException, IOException {
+    public static int addMembers(String messageGroupID, String messageName , String... userID) throws JSONException, IOException {
         JSONObject json = new JSONObject();
         json.put("messageGroupID", messageGroupID);
+        json.put("messageName", messageName);
 
         JSONArray ja = new JSONArray();
         for (String user : userID) {
