@@ -16,7 +16,6 @@ package com.harbinpointech.carcenter.fragment;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,7 +27,6 @@ import android.provider.BaseColumns;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,7 +34,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
@@ -432,7 +429,7 @@ public class ContactlistFragment extends ListFragment {
                                 if (result == 0) {
                                     JSONObject userInfo = p[0].getJSONObject("d");
                                     int mUserIdx = userInfo.getInt(Contacts.ID);
-                                    WebHelper.sendMessage(Message.MSG_ADD_FRIEND, false, String.valueOf(mUserIdx));
+                                    WebHelper.sendMessage(Message.MSG_ADD_FRIEND + mMyName, false, String.valueOf(mUserIdx));
                                 } else {
                                     getListView().post(new Runnable() {
                                         @Override

@@ -11,8 +11,17 @@ public class Message implements BaseColumns {
 
 
     //    public static final String MSG_ADD_FRIEND = "[][][][]";
+    /**
+     * 表示请求加某人为好友
+     */
     public static final String MSG_ADD_FRIEND = "MSG_ADD_FRIEND";
+    /**
+     * 表示接收某人的好友请求
+     */
     public static final String MSG_ADD_FRIEND_ACCEPT = "MSG_ADD_FRIEND_ACCEPT";
+    /**
+     * 表示拒绝某人的好友请求
+     */
     public static final String MSG_ADD_FRIEND_REJECT = "MSG_ADD_FRIEND_REJECT";
 
     /*

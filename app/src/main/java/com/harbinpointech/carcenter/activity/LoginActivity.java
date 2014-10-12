@@ -3,6 +3,7 @@ package com.harbinpointech.carcenter.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -12,8 +13,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.Contacts;
+import com.harbinpointech.carcenter.data.Group;
+import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 import com.harbinpointech.carcenter.utils.CommonUtils;
@@ -127,6 +131,13 @@ public class LoginActivity extends BaseActivity {
                     mProgress.setCancelable(false);
                     mProgress.setMessage("正在登录...");
                     mProgress.show();
+                    String old = PreferenceManager.getDefaultSharedPreferences(LoginActivity.this).getString(KEY_USER_NAME, null);
+                    if (old != null && !old.equals(username)){
+                        SQLiteDatabase base = CarApp.lockDataBase();
+                        base.execSQL("DELETE FROM " + Contacts.TABLE);
+                        base.execSQL("DELETE FROM " + Group.TABLE);
+                        base.execSQL("DELETE FROM " + Message.TABLE);
+                    }
                 }
 
                 @Override

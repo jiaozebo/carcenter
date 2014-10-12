@@ -89,6 +89,27 @@
                 android:textSize="12sp"
                 android:visibility="invisible" />
         </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/btn_container_bbs"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" >
+
+            <Button
+                android:id="@+id/main_btn_bbs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/main_bottom_item_bg"
+                android:drawableTop="@android:drawable/ic_menu_sort_by_size"
+                android:onClick="onTabClicked"
+                android:paddingBottom="2dip"
+                android:paddingTop="7dip"
+                android:scaleType="matrix"
+                android:text="论坛"
+                android:textColor="@color/main_botton_text_color"
+                android:textSize="12sp" />
+        </RelativeLayout>
     </LinearLayout>
 
     <RelativeLayout

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -26,6 +27,7 @@ import com.harbinpointech.carcenter.QueryInfosService;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
+import com.harbinpointech.carcenter.fragment.BBSFragment;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
@@ -40,7 +42,6 @@ public class MainActivity extends ActionBarActivity {
     public static final int REQUEST_SETTING = 1000;
     public static final int RESULT_QUIT = 1000;
     private int mCurrentSelectId;
-    private boolean useDemo = false;
     private NewMessageBroadcastReceiver mMsgReceiver;
     private HashMap<Integer, Fragment> mFragmentsMap = new HashMap<Integer, Fragment>();
     private double[] mLastLocation;
@@ -64,10 +65,12 @@ public class MainActivity extends ActionBarActivity {
         args.putString(LoginActivity.KEY_PWD, intent.getStringExtra(LoginActivity.KEY_PWD));
         args.putInt(LoginActivity.KEY_PWD, intent.getIntExtra(LoginActivity.KEY_USER_INDEX, 0));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
+        Fragment bbs = Fragment.instantiate(this, BBSFragment.class.getName(), null);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
         mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
         mFragmentsMap.put(R.id.main_btn_chat, chatList);
-        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).hide(fixCar).hide(chatList).commit();
+        mFragmentsMap.put(R.id.main_btn_bbs, bbs);
+        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).add(R.id.fragment_container, bbs).hide(fixCar).hide(chatList).hide(bbs).commit();
 
         setTitle("查看车辆");
 
@@ -77,14 +80,15 @@ public class MainActivity extends ActionBarActivity {
 
         fixUnread();
 
-        String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER);
+        String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID);
         if (!TextUtils.isEmpty(user)) {
             boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
 //            new AlertDialog.Builder(this).setTitle(getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).show();
         } else {
-            user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER);
+            user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID);
+            String name = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_NAME);
             if (!TextUtils.isEmpty(user))
-                answerAddRequest(this, user);
+                answerAddRequest(this, user, name);
         }
     }
 
@@ -214,22 +218,23 @@ public class MainActivity extends ActionBarActivity {
 
     public static void handleOnReceive(Intent intent, Activity activity) {
         if (intent.getAction().equals(QueryInfosService.ACTION_REQUEST_FRIEND)) {
-            String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER);
-            if (!TextUtils.isEmpty(user)) {
-                answerAddRequest(activity, user);
+            String id = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID);
+            String name = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_NAME);
+            if (!TextUtils.isEmpty(id)) {
+                answerAddRequest(activity, id, name);
             }
         } else if (intent.getAction().equals(QueryInfosService.ACTION_REQUEST_FRIEND_ANSWERED)) {
-            String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER);
+            String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_NAME);
             if (!TextUtils.isEmpty(user)) {
                 boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
-                new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).show();
+                new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).setPositiveButton("确定",null).show();
             } else {
 
             }
         }
     }
 
-    private static void answerAddRequest(Activity activity, final String user) {
+    private static void answerAddRequest(final Activity activity, final String id, final String name) {
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, final int which) {
@@ -237,7 +242,8 @@ public class MainActivity extends ActionBarActivity {
                     @Override
                     public void run() {
                         try {
-                            WebHelper.sendMessage(which == DialogInterface.BUTTON_POSITIVE ? Message.MSG_ADD_FRIEND_ACCEPT : Message.MSG_ADD_FRIEND_REJECT, false, user);
+                            String myName = PreferenceManager.getDefaultSharedPreferences(activity).getString(LoginActivity.KEY_USER_NAME, "");
+                            WebHelper.sendMessage(which == DialogInterface.BUTTON_POSITIVE ? Message.MSG_ADD_FRIEND_ACCEPT + myName : Message.MSG_ADD_FRIEND_REJECT + myName, false, id);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         } catch (IOException e) {
@@ -248,7 +254,7 @@ public class MainActivity extends ActionBarActivity {
 
             }
         };
-        new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s 请求添加您为好友", user)).setPositiveButton("接收", listener).setNegativeButton("拒绝", listener).show();
+        new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s 请求添加您为好友", name)).setPositiveButton("接收", listener).setNegativeButton("拒绝", listener).show();
     }
 
     private void fixUnread() {

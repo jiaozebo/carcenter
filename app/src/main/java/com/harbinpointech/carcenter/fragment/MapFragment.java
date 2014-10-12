@@ -28,19 +28,21 @@ import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.SupportMapFragment;
+import com.baidu.mapapi.map.Text;
 import com.baidu.mapapi.map.TextOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.activity.VehicleInfoActivity;
 import com.harbinpointech.carcenter.data.WebHelper;
-import com.harbinpointech.carcenter.util.AsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -52,7 +54,11 @@ public class MapFragment extends SupportMapFragment {
     private BDLocationListener mListener;
     private BDLocation mLastLocation;
     private MapView mMapView;
-    private Thread mThread;
+    private List<Thread> mFixPositionThreads;
+    private Thread mQueryCarPosThread;
+
+    private List<Marker> mCars = new ArrayList<Marker>();
+    private List<Text> mCarNames = new ArrayList<Text>();
 
     public MapFragment() {
         // Required empty public constructor
@@ -100,81 +106,86 @@ public class MapFragment extends SupportMapFragment {
     @Override
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
-
-        new AsyncTask<Void, Integer, Integer>() {
+        mQueryCarPosThread = new Thread("QueryCarsPosT") {
             @Override
-            protected Integer doInBackground(Void... params) {
+            public void run() {
                 int result = 0;
-                JSONObject[] cars = new JSONObject[1];
-                try {
-                    result = WebHelper.getCars(cars);
-                    if (result == 0) {
-                        mCarPos = cars[0];
+                do {
+                    JSONObject[] cars = new JSONObject[1];
+                    try {
+                        result = WebHelper.getCars(cars);
+                        if (result == 0) {
+                            mCarPos = cars[0];
 
-
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    result = -1;
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    result = -2;
-                }
-                return result;
-            }
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-            }
-
-            @Override
-            protected void onPostExecute(Integer integer) {
-                super.onPostExecute(integer);
-                if (integer == 0) {
-                    mThread = new Thread() {
-                        @Override
-                        public void run() {
                             try {
                                 JSONArray js = mCarPos.getJSONArray("d");
-                                for (int i = 0; mThread != null && i < js.length(); i++) {
-                                    JSONObject item = js.getJSONObject(i);
-                                    //定义Maker坐标点
-                                    double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
-                                    WebHelper.gps2lnglat(data);
+                                for (int i = 0; mQueryCarPosThread != null && i < js.length(); i++) {
+                                    final JSONObject item = js.getJSONObject(i);
+                                    final int index = i;
+                                    Thread t = new Thread() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                //定义Maker坐标点
+                                                double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+                                                WebHelper.gps2lnglat(data);
 //                            Object []objData = new Object[]{data[0],data[1]};
 
-                                    int result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
-                                    if (result == 0 && isResumed()) {
-                                        LatLng point = new LatLng(data[0], data[1]);
+                                                int result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
+                                                if (result == 0 && mQueryCarPosThread != null && isResumed()) {
+                                                    LatLng point = new LatLng(data[0], data[1]);
 //构建Marker图标
-                                        BitmapDescriptor bitmap = BitmapDescriptorFactory
-                                                .fromResource(R.drawable.icon_marka);
+                                                    BitmapDescriptor bitmap = BitmapDescriptorFactory
+                                                            .fromResource(R.drawable.icon_marka);
 //构建MarkerOption，用于在地图上添加Marker
-                                        Bundle extrInfo = new Bundle();
-                                        extrInfo.putInt("index", i);
-                                        OverlayOptions option = new MarkerOptions()
-                                                .position(point)
-                                                .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
+                                                    Bundle extrInfo = new Bundle();
+                                                    extrInfo.putInt("index", index);
+                                                    OverlayOptions option = new MarkerOptions()
+                                                            .position(point)
+                                                            .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
 //在地图上添加Marker，并显示
 
-                                        Marker m = (Marker) getBaiduMap().addOverlay(option);
-                                        option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
 
-                                        getBaiduMap().addOverlay(option);
-                                    }
+
+                                                    Marker m = (Marker) getBaiduMap().addOverlay(option);
+                                                    mCars.add(m);
+
+                                                    option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+                                                    Text name = (Text) getBaiduMap().addOverlay(option);
+                                                    mCarNames.add(name);
+                                                }
+                                            } catch (JSONException ex) {
+                                                ex.printStackTrace();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    };
+                                    t.start();
+                                    mFixPositionThreads.add(t);
                                 }
-                            } catch (IOException e) {
-                                e.printStackTrace();
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }
-                    };
-                    mThread.start();
-                }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        result = -1;
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        result = -2;
+                    }
+                    if (mQueryCarPosThread != null) {
+                        try {
+                            Thread.sleep(10000);    // 10秒更新一次
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } while (mQueryCarPosThread != null);
             }
-        }.execute();
+        };
+        mQueryCarPosThread.start();
         initlocation();
         getBaiduMap().setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
                                                    @Override
@@ -199,9 +210,9 @@ public class MapFragment extends SupportMapFragment {
 
     @Override
     public void onDestroy() {
-        if (mThread != null) {
-            mThread.interrupt();
-            mThread = null;
+        if (mQueryCarPosThread != null) {
+            mQueryCarPosThread.interrupt();
+            mQueryCarPosThread = null;
         }
         uninitLocation();
         super.onDestroy();
