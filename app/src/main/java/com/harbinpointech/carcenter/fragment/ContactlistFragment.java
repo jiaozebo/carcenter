@@ -16,6 +16,7 @@ package com.harbinpointech.carcenter.fragment;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -47,6 +48,7 @@ import com.harbinpointech.carcenter.CarSQLiteOpenHelper;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.LoginActivity;
+import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.data.Contacts;
 import com.harbinpointech.carcenter.data.Group;
 import com.harbinpointech.carcenter.data.Message;
@@ -110,10 +112,12 @@ public class ContactlistFragment extends ListFragment {
                 String sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
                 Log.i("SQL", sql);
                 Cursor cc = CarApp.lockDataBase().rawQuery(sql, null);
+                TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
                 if (cc.moveToFirst()) {
-                    TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
                     unread.setVisibility(View.VISIBLE);
                     unread.setText(String.valueOf(cc.getCount()));
+                } else {
+                    unread.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -141,8 +145,8 @@ public class ContactlistFragment extends ListFragment {
                     listView.post(new Runnable() {
                         @Override
                         public void run() {
-                            String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
-                                    , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
+                            String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND,
+                                    BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
                             Log.i("SQL", sql);
                             mCursor = CarApp.lockDataBase().rawQuery(sql, null);
                             CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
@@ -172,10 +176,26 @@ public class ContactlistFragment extends ListFragment {
         // 进入群聊列表页面//进入群聊
         Intent intent = new Intent(getActivity(), ChatActivity.class);
         // it is group chat
-        intent.putExtra(ChatActivity.SENDER_ID, c.getString(c.getColumnIndex(Contacts.ID)));
+
+        int groupId = c.getInt(c.getColumnIndex(Group.ID));
+        boolean group = groupId != 0;
+        intent.putExtra(ChatActivity.IS_GROUP_CHAT, group);
+        intent.putExtra(ChatActivity.SENDER_ID, group ? String.valueOf(groupId) : c.getString(c.getColumnIndex(Contacts.ID)));
         intent.putExtra(ChatActivity.SENDER_NAME, c.getString(c.getColumnIndex(Contacts.NAME)));
-        intent.putExtra(ChatActivity.IS_GROUP_CHAT, c.getInt(c.getColumnIndex(Group.ID)) != 0);
+
         startActivity(intent);
+
+
+//        String sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
+        ContentValues cv = new ContentValues();
+        cv.put(Message.STATE, 1);
+        CarApp.lockDataBase().update(Message.TABLE, cv, String.format("%s =0 and %s=%d and %s=%s", Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, group ? "'Y'" : "'N'"), null);
+
+
+        TextView unread = (TextView) v.findViewById(R.id.unread_msg_number);
+        unread.setVisibility(View.INVISIBLE);
+        MainActivity main = (MainActivity) getActivity();
+        main.fixUnread();
     }
 
     @Override

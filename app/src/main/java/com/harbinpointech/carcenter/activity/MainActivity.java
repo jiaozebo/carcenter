@@ -45,6 +45,7 @@ public class MainActivity extends ActionBarActivity {
     private NewMessageBroadcastReceiver mMsgReceiver;
     private HashMap<Integer, Fragment> mFragmentsMap = new HashMap<Integer, Fragment>();
     private double[] mLastLocation;
+    private int mMyIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +64,8 @@ public class MainActivity extends ActionBarActivity {
         Intent intent = getIntent();
         args.putString(LoginActivity.KEY_USER_NAME, intent.getStringExtra(LoginActivity.KEY_USER_NAME));
         args.putString(LoginActivity.KEY_PWD, intent.getStringExtra(LoginActivity.KEY_PWD));
-        args.putInt(LoginActivity.KEY_PWD, intent.getIntExtra(LoginActivity.KEY_USER_INDEX, 0));
+        mMyIndex = intent.getIntExtra(LoginActivity.KEY_USER_INDEX, 0);
+        args.putInt(LoginActivity.KEY_USER_INDEX, intent.getIntExtra(LoginActivity.KEY_USER_INDEX, 0));
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
         Fragment bbs = Fragment.instantiate(this, BBSFragment.class.getName(), null);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
@@ -227,7 +229,7 @@ public class MainActivity extends ActionBarActivity {
             String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_NAME);
             if (!TextUtils.isEmpty(user)) {
                 boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
-                new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).setPositiveButton("确定",null).show();
+                new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).setPositiveButton("确定", null).show();
             } else {
 
             }
@@ -257,10 +259,10 @@ public class MainActivity extends ActionBarActivity {
         new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.app_name)).setMessage(String.format("%s 请求添加您为好友", name)).setPositiveButton("接收", listener).setNegativeButton("拒绝", listener).show();
     }
 
-    private void fixUnread() {
+    public void fixUnread() {
         Cursor c = null;
         try {
-            String sql = String.format("select %s from %s where %s =0", BaseColumns._ID, Message.TABLE, Message.STATE);
+            String sql = String.format("select %s from %s where %s =0 and %s=%d", BaseColumns._ID, Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex);
             Log.i("SQL", sql);
             c = CarApp.lockDataBase().rawQuery(sql, null);
             int count = c.getCount();
@@ -268,6 +270,9 @@ public class MainActivity extends ActionBarActivity {
                 TextView unread = (TextView) findViewById(R.id.unread_msg_number);
                 unread.setText(String.valueOf(count));
                 unread.setVisibility(View.VISIBLE);
+            } else {
+                TextView unread = (TextView) findViewById(R.id.unread_msg_number);
+                unread.setVisibility(View.INVISIBLE);
             }
         } finally {
             if (c != null) {

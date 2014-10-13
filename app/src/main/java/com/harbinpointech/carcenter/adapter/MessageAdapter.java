@@ -49,6 +49,9 @@ public class MessageAdapter extends CursorAdapter {
     public static final String VIDEO_DIR = "chat/video";
     private final String mOtherSideIndex;
     private boolean mIsGroup;
+    /**
+     * 私聊情况下，OtherSideName为唯一
+     */
     private String mOtherSideName;
     private LayoutInflater mInflater;
     private Activity activity;
@@ -64,14 +67,13 @@ public class MessageAdapter extends CursorAdapter {
         mOtherSideIndex = otherSideIndex;
         Cursor cursor = null;
         try {
-            if (isGroup) {
-                cursor = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s = ?", Group.NAME, Group.TABLE, Group.ID), new String[]{mOtherSideIndex});
-            } else {
+            if (!isGroup) {
                 cursor = CarApp.lockDataBase().rawQuery(String.format("select %s from %s where %s = ?", Contacts.NAME, Contacts.TABLE, Contacts.ID), new String[]{mOtherSideIndex});
+                if (cursor.moveToFirst()) {
+                    mOtherSideName = cursor.getString(cursor.getColumnIndex(isGroup ? Group.NAME : Contacts.NAME));
+                }
             }
-            if (cursor.moveToFirst()) {
-                mOtherSideName = cursor.getString(cursor.getColumnIndex(isGroup ? Group.NAME : Contacts.NAME));
-            }
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -84,9 +86,11 @@ public class MessageAdapter extends CursorAdapter {
         Cursor c = (Cursor) getItem(position);
         if (c == null)
             return -1;// invalid
-        if (c.getString(c.getColumnIndex(Message.SENDER)).equals(mOtherSideIndex)) {
+        if ((mIsGroup && mOtherSideIndex.equals(c.getString(c.getColumnIndex(Message.GROUPID)))) ||
+                mOtherSideIndex.equals(c.getString(c.getColumnIndex(Message.SENDER)))) {
             return MESSAGE_TYPE_RECV_TXT;
-        } else if (c.getString(c.getColumnIndex(Message.RECEIVER)).equals(mOtherSideIndex)) {
+        } else if (
+                c.getString(c.getColumnIndex(Message.RECEIVER)).equals(mOtherSideIndex)) {
             return MESSAGE_TYPE_SENT_TXT;
         }
         return -1;
@@ -124,8 +128,17 @@ public class MessageAdapter extends CursorAdapter {
             holder.pb.setVisibility(c.getInt(c.getColumnIndex(Message.STATE)) == -1 ? View.VISIBLE : View.GONE);
 //            holder.staus_iv.setVisibility(View.GONE);
         } else {
-//            holder.tv_userId.setText();
-            holder.tv_userId.setText(mOtherSideName);
+            holder.tv_userId.setText(null);
+            if (!mIsGroup) {
+                holder.tv_userId.setText(mOtherSideName);
+            } else {
+                Cursor contacts = CarApp.lockDataBase().rawQuery("select " + Contacts.NAME + " from " + Contacts.TABLE + " where " + Contacts.ID + " = " + c.getString(c.getColumnIndex(Message.SENDER)), null);
+                if (contacts.moveToFirst()) {
+                    String sender = contacts.getString(contacts.getColumnIndex(Contacts.NAME));
+                    holder.tv_userId.setText(sender);
+                }
+                contacts.close();
+            }
         }
 
         TextView timestamp = (TextView) convertView.findViewById(R.id.timestamp);

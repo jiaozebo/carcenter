@@ -4,9 +4,11 @@ package com.harbinpointech.carcenter.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,13 +44,22 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class MapFragment extends SupportMapFragment {
 
+    private static final String TAG = "MAPFRAGMENT";
     JSONObject mCarPos;
     private LocationClient mLocationClient;
     private BDLocationListener mListener;
@@ -59,6 +70,30 @@ public class MapFragment extends SupportMapFragment {
 
     private List<Marker> mCars = new ArrayList<Marker>();
     private List<Text> mCarNames = new ArrayList<Text>();
+
+
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
+    private static final int MAXIMUM_POOL_SIZE = 128;
+    private static final int KEEP_ALIVE = 1;
+
+    private static final ThreadFactory sThreadFactory = new ThreadFactory() {
+        private final AtomicInteger mCount = new AtomicInteger(1);
+
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "THREAD_POOL_EXECUTOR #" + mCount.getAndIncrement());
+        }
+    };
+
+    private static final BlockingQueue<Runnable> sPoolWorkQueue =
+            new LinkedBlockingQueue<Runnable>(MAXIMUM_POOL_SIZE);
+
+    /**
+     * An {@link java.util.concurrent.Executor} that can be used to execute tasks in parallel.
+     */
+    public static final Executor THREAD_POOL_EXECUTOR
+            = new ThreadPoolExecutor(30, MAXIMUM_POOL_SIZE, 10,
+            TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory, new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public MapFragment() {
         // Required empty public constructor
@@ -106,6 +141,8 @@ public class MapFragment extends SupportMapFragment {
     @Override
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
+        mFixPositionThreads = new ArrayList<Thread>();
+
         mQueryCarPosThread = new Thread("QueryCarsPosT") {
             @Override
             public void run() {
@@ -119,10 +156,45 @@ public class MapFragment extends SupportMapFragment {
 
                             try {
                                 JSONArray js = mCarPos.getJSONArray("d");
+                                Log.w(TAG, "queryed cars num:" + js.length());
+
+                                // 先删除先前有，这次没查到了的
+                                synchronized (mCars) {
+                                    Iterator<Marker> it = mCars.iterator();
+                                    while (it.hasNext()) {
+                                        Marker mk = it.next();
+                                        String name = mk.getExtraInfo().getString("CarName");
+                                        boolean found = false;
+                                        for (int i = 0; i < js.length(); i++) {
+                                            final JSONObject item = js.getJSONObject(i);
+                                            String carName = item.getString("CarName");
+                                            if (name.equals(carName)) {
+                                                found = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!found) {
+                                            mk.remove();
+                                            it.remove();
+                                            Log.w(TAG, "remove carTxt :" + name);
+                                            Iterator<Text> t = mCarNames.iterator();
+                                            while (t.hasNext()) {
+                                                Text txt = t.next();
+                                                String name2 = txt.getExtraInfo().getString("CarName");
+                                                if (name2.equals(name)) {
+                                                    txt.remove();
+                                                    t.remove();
+                                                    Log.w(TAG, "remove carTxt :" + name);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                                 for (int i = 0; mQueryCarPosThread != null && i < js.length(); i++) {
                                     final JSONObject item = js.getJSONObject(i);
-                                    final int index = i;
-                                    Thread t = new Thread() {
+                                    THREAD_POOL_EXECUTOR.execute(new Runnable() {
                                         @Override
                                         public void run() {
                                             try {
@@ -138,21 +210,44 @@ public class MapFragment extends SupportMapFragment {
                                                     BitmapDescriptor bitmap = BitmapDescriptorFactory
                                                             .fromResource(R.drawable.icon_marka);
 //构建MarkerOption，用于在地图上添加Marker
-                                                    Bundle extrInfo = new Bundle();
-                                                    extrInfo.putInt("index", index);
-                                                    OverlayOptions option = new MarkerOptions()
-                                                            .position(point)
-                                                            .icon(bitmap).title(item.getString("CarName")).extraInfo(extrInfo);
-//在地图上添加Marker，并显示
+
+                                                    boolean found = false;
+                                                    String carName = item.getString("CarName");
+                                                    synchronized (mCars) {
+                                                        for (Marker mk : mCars) {
+                                                            String name = mk.getExtraInfo().getString("CarName");
+                                                            if (name.equals(carName)) {
+                                                                mk.setPosition(point);
+                                                                Log.w(TAG, "mov car :" + carName);
+                                                                found = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if (found) {
+                                                            for (Text txt : mCarNames) {
+                                                                String name = txt.getExtraInfo().getString("CarName");
+                                                                if (name.equals(carName)) {
+                                                                    txt.setPosition(point);
+                                                                    Log.w(TAG, "mov carTxt :" + carName);
+                                                                    break;
+                                                                }
+                                                            }
+                                                            return;
+                                                        }
 
 
-
-                                                    Marker m = (Marker) getBaiduMap().addOverlay(option);
-                                                    mCars.add(m);
-
-                                                    option = new TextOptions().position(point).text(item.getString("CarName")).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
-                                                    Text name = (Text) getBaiduMap().addOverlay(option);
-                                                    mCarNames.add(name);
+                                                        Log.w(TAG, "add car :" + carName);
+                                                        Bundle extrInfo = new Bundle();
+                                                        extrInfo.putString("CarName", carName);
+                                                        OverlayOptions option = new MarkerOptions()
+                                                                .position(point)
+                                                                .icon(bitmap).title(carName).extraInfo(extrInfo);
+                                                        Marker m = (Marker) getBaiduMap().addOverlay(option);
+                                                        mCars.add(m);
+                                                        option = new TextOptions().position(point).text(carName).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+                                                        Text name = (Text) getBaiduMap().addOverlay(option);
+                                                        mCarNames.add(name);
+                                                    }
                                                 }
                                             } catch (JSONException ex) {
                                                 ex.printStackTrace();
@@ -160,9 +255,8 @@ public class MapFragment extends SupportMapFragment {
                                                 e.printStackTrace();
                                             }
                                         }
-                                    };
-                                    t.start();
-                                    mFixPositionThreads.add(t);
+                                    });
+//                                    mFixPositionThreads.add(t);
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();

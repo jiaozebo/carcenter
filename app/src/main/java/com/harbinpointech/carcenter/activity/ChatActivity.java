@@ -115,7 +115,11 @@ public class ChatActivity extends ActionBarActivity {
             Cursor c = null;
             try {
                 SQLiteDatabase db = CarApp.lockDataBase();
-                c = db.rawQuery(String.format("select * from %s where %s=? or %s=? order by %s;", Message.TABLE, Message.SENDER, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
+                if (mIsGroup) {
+                    c = db.rawQuery(String.format("select * from %s where %s=? or %s=? order by %s;", Message.TABLE, Message.GROUPID, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
+                } else {
+                    c = db.rawQuery(String.format("select * from %s where %s=%s and (%s=? or %s=? )order by %s;", Message.TABLE, Message.ISGROUP, "'N'", Message.SENDER, Message.RECEIVER, Message.DATETIME), new String[]{String.valueOf(mOtherSideId), String.valueOf(mOtherSideId)});
+                }
                 if (c.moveToFirst()) {
                     mCursor = c;
                 }
@@ -131,6 +135,7 @@ public class ChatActivity extends ActionBarActivity {
             ContentValues cv = new ContentValues();
             cv.put(Message.CONTENT, text);
             cv.put(Message.SENDER, mMyId);
+            cv.put(Message.ISGROUP, mIsGroup ? "Y" : "N");
             cv.put(Message.RECEIVER, mOtherSideId);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             cv.put(Message.DATETIME, sdf.format(new Date()));
