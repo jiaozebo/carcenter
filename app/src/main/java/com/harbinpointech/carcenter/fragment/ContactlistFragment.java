@@ -23,6 +23,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.v4.app.ListFragment;
@@ -142,7 +144,7 @@ public class ContactlistFragment extends ListFragment {
                         mGroupSets = users[0].getJSONArray("d");
                         CarSQLiteOpenHelper.insert(Group.TABLE, mGroupSets);
                     }
-                    listView.post(new Runnable() {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
                             String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND,
@@ -182,6 +184,7 @@ public class ContactlistFragment extends ListFragment {
         intent.putExtra(ChatActivity.IS_GROUP_CHAT, group);
         intent.putExtra(ChatActivity.SENDER_ID, group ? String.valueOf(groupId) : c.getString(c.getColumnIndex(Contacts.ID)));
         intent.putExtra(ChatActivity.SENDER_NAME, c.getString(c.getColumnIndex(Contacts.NAME)));
+        intent.putExtra(ChatActivity.USER_ID,String.valueOf(mMyIndex));
 
         startActivity(intent);
 
@@ -472,6 +475,47 @@ public class ContactlistFragment extends ListFragment {
 
                 }
             }).setTitle("添加好友").setNegativeButton("取消", null).setView(userEt).show();
+        } else if (item.getItemId() == R.id.action_create_group) {
+            final EditText userEt = new EditText(getActivity());
+            userEt.setHint("请输入群组名称");
+            new AlertDialog.Builder(getActivity()).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    final String id = userEt.getText().toString();
+                    if (TextUtils.isEmpty(id)) {
+                        return;
+                    }
+                    final AlertDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍等...", false, false);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            try {
+                                JSONObject[] p = new JSONObject[1];
+                                int result = WebHelper.createMessageGroup(p, id);
+                                if (result == 0) {
+                                    JSONObject userInfo = p[0].getJSONObject("d");
+                                } else {
+                                    getListView().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Activity activity = getActivity();
+                                            if (activity != null) {
+                                                Toast.makeText(activity.getApplicationContext(), "创建群组未成功", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            dlg.dismiss();
+                        }
+                    }.start();
+
+                }
+            }).setTitle("创建群组").setNegativeButton("取消", null).setView(userEt).show();
         }
         return true;
     }

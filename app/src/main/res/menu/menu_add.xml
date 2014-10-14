@@ -6,6 +6,12 @@
         android:id="@+id/action_add"
         android:icon="@android:drawable/ic_menu_add"
         android:orderInCategory="100"
-        android:title="添加"
-        app:showAsAction="ifRoom" />
+        android:title="添加好友"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_create_group"
+        android:icon="@android:drawable/ic_menu_add"
+        android:orderInCategory="100"
+        android:title="创建群"
+        app:showAsAction="never" />
 </menu>

@@ -18,6 +18,7 @@ import android.provider.BaseColumns;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -215,11 +216,16 @@ public class ChatActivity extends ActionBarActivity {
                 if (QueryInfosService.ACTION_NOTIFICATIONS_RECEIVED.equals(intent.getAction())) {
                     String chatsJsonArray = intent.getStringExtra(QueryInfosService.EXTRA_CHAT_ARRAY);
                     try {
+                        ContentValues cv = new ContentValues();
+                        cv.put(Message.STATE, 1);
+                        int count = CarApp.lockDataBase().update(Message.TABLE, cv, String.format("%s!=%d and %s='%s'", Message.STATE, 1, Message.RECEIVER, mMyId), null);
+                        Log.d("Chat", "update count : " + count);
                         JSONArray array = new JSONArray(chatsJsonArray);
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject chat = array.getJSONObject(i);
                             if (chat.getString(com.harbinpointech.carcenter.data.Message.SENDER).equals(mOtherSideId)) {
                                 queryCursor();
+                                break;
                             }
                         }
                     } catch (JSONException e) {

@@ -191,10 +191,10 @@ public class WebHelper {
         }
     }
 
-    public static int createMessageGroup(String name) throws JSONException, IOException {
+    public static int createMessageGroup(JSONObject[] params, String name) throws JSONException, IOException {
         JSONObject obj = new JSONObject();
-        obj.put("name", name);
-        JSONObject[] params = new JSONObject[]{obj};
+        obj.put("name", new String(name.getBytes(), "ISO8859-1"));
+        params[0] = obj;
         int result = doPost(URL + "CreateMessageGroup", params);
         if (result == 200) {
             return 0;
