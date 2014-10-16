@@ -110,8 +110,17 @@ public class ContactlistFragment extends ListFragment {
             public void bindView(View view, Context context, Cursor cursor) {
                 TextView text = (TextView) view.findViewById(android.R.id.text1);
                 text.setText(cursor.getString(cursor.getColumnIndex(Contacts.NAME)));
-                boolean isGroup = cursor.getInt(cursor.getColumnIndex(Group.ID)) != 0;
-                String sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
+                int groupID = cursor.getInt(cursor.getColumnIndex(Group.ID));
+                boolean isGroup = groupID != 0;
+
+                String sql = null;
+                if (isGroup) {
+//                    sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
+                    sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.GROUPID, String.valueOf(groupID), Message.ISGROUP, "'Y'");
+                } else {
+                    String senderId = cursor.getString(cursor.getColumnIndex(Contacts.ID));
+                    sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.SENDER, senderId, Message.ISGROUP, "'N'");
+                }
                 Log.i("SQL", sql);
                 Cursor cc = CarApp.lockDataBase().rawQuery(sql, null);
                 TextView unread = (TextView) view.findViewById(R.id.unread_msg_number);
@@ -123,7 +132,10 @@ public class ContactlistFragment extends ListFragment {
                 }
             }
         });
-        final ListView listView = getListView();
+        queryAndDisplay();
+    }
+
+    private void queryAndDisplay() {
         new Thread("QUERY_CONTACTS") {
             JSONArray mUserSets
                     ,
@@ -153,6 +165,7 @@ public class ContactlistFragment extends ListFragment {
                             mCursor = CarApp.lockDataBase().rawQuery(sql, null);
                             CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
                             cursorAdapter.changeCursor(mCursor);
+                            setListShown(true);
                         }
                     });
                 } catch (JSONException e) {
@@ -168,6 +181,9 @@ public class ContactlistFragment extends ListFragment {
         mCursor = CarApp.lockDataBase().rawQuery(sql, null);
         CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
         cursorAdapter.changeCursor(mCursor);
+        if (mCursor.getCount() == 0) {
+            setListShown(false);
+        }
     }
 
 
@@ -184,7 +200,7 @@ public class ContactlistFragment extends ListFragment {
         intent.putExtra(ChatActivity.IS_GROUP_CHAT, group);
         intent.putExtra(ChatActivity.SENDER_ID, group ? String.valueOf(groupId) : c.getString(c.getColumnIndex(Contacts.ID)));
         intent.putExtra(ChatActivity.SENDER_NAME, c.getString(c.getColumnIndex(Contacts.NAME)));
-        intent.putExtra(ChatActivity.USER_ID,String.valueOf(mMyIndex));
+        intent.putExtra(ChatActivity.USER_ID, String.valueOf(mMyIndex));
 
         startActivity(intent);
 
@@ -192,7 +208,14 @@ public class ContactlistFragment extends ListFragment {
 //        String sql = String.format("select _id from %s where %s =0 and %s=%d and %s=%s", Message.TABLE, Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, isGroup ? "'Y'" : "'N'");
         ContentValues cv = new ContentValues();
         cv.put(Message.STATE, 1);
-        CarApp.lockDataBase().update(Message.TABLE, cv, String.format("%s =0 and %s=%d and %s=%s", Message.STATE, Message.RECEIVER, mMyIndex, Message.ISGROUP, group ? "'Y'" : "'N'"), null);
+        String sql = null;
+        if (group) {
+            sql = String.format("%s =0 and %s=%d and %s=%s and %s=%s", Message.STATE, Message.RECEIVER, mMyIndex, Message.GROUPID, String.valueOf(groupId), Message.ISGROUP, "'Y'");
+        } else {
+            String senderId = c.getString(c.getColumnIndex(Contacts.ID));
+            sql = String.format("%s =0 and %s=%d and %s=%s and %s=%s", Message.STATE, Message.RECEIVER, mMyIndex, Message.SENDER, senderId, Message.ISGROUP, "'N'");
+        }
+        CarApp.lockDataBase().update(Message.TABLE, cv, sql, null);
 
 
         TextView unread = (TextView) v.findViewById(R.id.unread_msg_number);
@@ -481,8 +504,8 @@ public class ContactlistFragment extends ListFragment {
             new AlertDialog.Builder(getActivity()).setPositiveButton("确定", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    final String id = userEt.getText().toString();
-                    if (TextUtils.isEmpty(id)) {
+                    final String name = userEt.getText().toString();
+                    if (TextUtils.isEmpty(name)) {
                         return;
                     }
                     final AlertDialog dlg = ProgressDialog.show(getActivity(), getString(R.string.app_name), "请稍等...", false, false);
@@ -491,9 +514,34 @@ public class ContactlistFragment extends ListFragment {
                         public void run() {
                             try {
                                 JSONObject[] p = new JSONObject[1];
-                                int result = WebHelper.createMessageGroup(p, id);
+                                int result = WebHelper.createMessageGroup(p, name);
                                 if (result == 0) {
-                                    JSONObject userInfo = p[0].getJSONObject("d");
+                                    int id = p[0].getInt("d");
+//                                    {
+//                                        "__type": "ServiceMessage:#WcfService.Entity",
+//                                            "Message1": null,
+//                                            "SendID": null,
+//                                            "MessageGroupID": "2",
+//                                            "ReceiveID": null,
+//                                            "MessageGroup": "三个群",
+//                                            "MessageCount": null,
+//                                            "IsGroupMessage": null,
+//                                            "SendTime": null,
+//                                            "ID": null,
+//                                            "ReceiveTime": null
+//                                    },
+                                    JSONArray array = new JSONArray();
+                                    JSONObject group = new JSONObject();
+                                    group.put("MessageGroupID", id);
+                                    group.put("MessageGroup", name);
+                                    array.put(group);
+                                    CarSQLiteOpenHelper.insert(Group.TABLE, array);
+                                    getListView().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            queryAndDisplay();
+                                        }
+                                    });
                                 } else {
                                     getListView().post(new Runnable() {
                                         @Override

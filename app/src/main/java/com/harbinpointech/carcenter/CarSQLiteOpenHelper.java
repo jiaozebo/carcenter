@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
 import com.harbinpointech.carcenter.data.Contacts;
+import com.harbinpointech.carcenter.data.FixLog;
 import com.harbinpointech.carcenter.data.Group;
 import com.harbinpointech.carcenter.data.Message;
 
@@ -29,9 +30,7 @@ import java.util.regex.Pattern;
 public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String DBNAME = "carcenter.db";
-    private static final int VERSION = 11;
-    private static final SimpleDateFormat sSDFSource = new SimpleDateFormat("yyyy/M/d  HH:mm:ss");
-    private static final SimpleDateFormat sSDFDest = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
+    private static final int VERSION = 12;
 
     public CarSQLiteOpenHelper(Context context) {
         super(context, DBNAME, null, VERSION, null);
@@ -42,6 +41,7 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
         Message.createTable(db);
         Contacts.createTable(db);
         Group.createTable(db);
+        FixLog.createTable(db);
     }
 
     @Override
@@ -49,6 +49,7 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
         db.execSQL(String.format("drop table if exists '%s'", Contacts.TABLE));
         db.execSQL(String.format("drop table if exists '%s'", Message.TABLE));
         db.execSQL(String.format("drop table if exists '%s'", Group.TABLE));
+        db.execSQL(String.format("drop table if exists '%s'", FixLog.TABLE));
         onCreate(db);
     }
 
@@ -84,7 +85,7 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
                     }
                 } else if (table.equals(Group.TABLE)) {
                     Iterator<String> it = cv.keySet().iterator();
-                    while (it.hasNext()){
+                    while (it.hasNext()) {
                         String key = it.next();
                         if (key.equals(Group.ID)) {
                             Integer index = cv.getAsInteger(key);

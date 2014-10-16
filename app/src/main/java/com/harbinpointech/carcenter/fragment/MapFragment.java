@@ -284,12 +284,11 @@ public class MapFragment extends SupportMapFragment {
         getBaiduMap().setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
                                                    @Override
                                                    public boolean onMarkerClick(Marker marker) {
-                                                       Bundle bundle = marker.getExtraInfo();
-                                                       int index = bundle.getInt("index");
                                                        try {
-                                                           JSONObject car = mCarPos.getJSONArray("d").getJSONObject(index);
+                                                           Bundle bundle = marker.getExtraInfo();
+                                                           String name = bundle.getString("CarName");
                                                            Intent i = new Intent(getActivity(), VehicleInfoActivity.class);
-                                                           i.putExtra(VehicleInfoActivity.EXTRA_CARNAME, car.getString("CarName"));
+                                                           i.putExtra(VehicleInfoActivity.EXTRA_CARNAME, name);
                                                            startActivity(i);
                                                        } catch (Exception e) {
                                                            e.printStackTrace();

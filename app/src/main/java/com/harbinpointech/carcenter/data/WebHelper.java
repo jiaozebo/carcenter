@@ -77,7 +77,9 @@ public class WebHelper {
      * @return
      */
     public static int getCarBaseInfos(JSONObject[] params, String carName, boolean getCarImg) throws JSONException, IOException {
-        params[0] = new JSONObject(String.format("{\"%s\":\"%s\",\"%s\":\"%s\"}", "carName", carName, "isGetImg", getCarImg));
+        params[0] = new JSONObject();
+        params[0].put("carName", new String(carName.getBytes(), "ISO8859-1"));
+        params[0].put("isGetImg", getCarImg);
         int result = doPost(URL + "MobileGetCarBaseInfos", params);
         if (result == 200) {
             return 0;
@@ -96,7 +98,8 @@ public class WebHelper {
      * @throws IOException
      */
     public static int getCarPluginInfos(JSONObject[] params, String carName) throws JSONException, IOException {
-        params[0] = new JSONObject(String.format("{\"%s\":\"%s\"}", "carName", carName));
+        params[0] = new JSONObject();
+        params[0].put("carName", new String(carName.getBytes(), "ISO8859-1"));
         int result = doPost(URL + "MobileGetCarDeviceInfo", params);
         if (result == 200) {
             return 0;
@@ -193,7 +196,7 @@ public class WebHelper {
 
     public static int createMessageGroup(JSONObject[] params, String name) throws JSONException, IOException {
         JSONObject obj = new JSONObject();
-        obj.put("name", new String(name.getBytes(), "ISO8859-1"));
+        obj.put("messageGroupName", new String(name.getBytes(), "ISO8859-1"));
         params[0] = obj;
         int result = doPost(URL + "CreateMessageGroup", params);
         if (result == 200) {
@@ -226,7 +229,7 @@ public class WebHelper {
 
     //
     public static int singin(String carName, double latitude, double longitude) throws JSONException, IOException {
-        JSONObject[] params = new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", carName, "lat", latitude, "lng", longitude))};
+        JSONObject[] params = new JSONObject[]{new JSONObject(String.format("{\"%s\":\"%s\", \"%s\":\"%.02f\",\"%s\":\"%.02f\"}", "carName", new String(carName.getBytes(), "ISO8859-1"), "lat", latitude, "lng", longitude))};
         int result = doPost(URL + "Signin", params);
         if (result == 200) {
             return params[0].getBoolean("d") ? 0 : 1;
@@ -380,7 +383,17 @@ public class WebHelper {
     public static void AddRepaireRecord() {
     }
 
-    public static void mobileGetRepaireRecords2() {
+    public static int mobileGetRepaireRecords2(JSONObject[] content, String carName, int index, int count) throws JSONException, IOException {
+        content[0] = new JSONObject();
+        content[0].put("carName", new String(carName.getBytes(), "ISO8859-1"));
+        content[0].put("index", index);
+        content[0].put("count", count);
+        int result = doPost(URL + "MobileGetRepaireRecords2", content);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
     }
 
 }

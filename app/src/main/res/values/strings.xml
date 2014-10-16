@@ -64,6 +64,7 @@
     <string name="title_section1">基本信息</string>
     <string name="title_section2">设备信息</string>
     <string name="title_section3">Section 3</string>
-    <string name="title_activity_scan">ScanActivity</string>
+    <string name="title_activity_scan">扫描车辆信息</string>
+    <string name="title_activity_view_fix_car_log">维修记录</string>
 
 </resources>

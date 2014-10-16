@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.mapapi.SDKInitializer;
 import com.harbinpointech.carcenter.CarApp;
@@ -59,7 +60,7 @@ public class MainActivity extends ActionBarActivity {
 
         FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
         Fragment map = new MapFragment();
-        Fragment fixCar = Fragment.instantiate(this, FixCarFragment.class.getName(), null);
+
         Bundle args = new Bundle();
         Intent intent = getIntent();
         args.putString(LoginActivity.KEY_USER_NAME, intent.getStringExtra(LoginActivity.KEY_USER_NAME));
@@ -69,10 +70,10 @@ public class MainActivity extends ActionBarActivity {
         Fragment chatList = Fragment.instantiate(this, ContactlistFragment.class.getName(), args);
         Fragment bbs = Fragment.instantiate(this, BBSFragment.class.getName(), null);
         mFragmentsMap.put(R.id.main_btn_view_cars, map);
-        mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
+//        mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
         mFragmentsMap.put(R.id.main_btn_chat, chatList);
         mFragmentsMap.put(R.id.main_btn_bbs, bbs);
-        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, fixCar).add(R.id.fragment_container, chatList).add(R.id.fragment_container, bbs).hide(fixCar).hide(chatList).hide(bbs).commit();
+        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, chatList).add(R.id.fragment_container, bbs).hide(chatList).hide(bbs).commit();
 
         setTitle("查看车辆");
 
@@ -170,27 +171,67 @@ public class MainActivity extends ActionBarActivity {
             WebHelper.logout();
             finish();
         } else if (requestCode == REQUEST_SCAN_VEHICLE && resultCode == RESULT_OK) {
-            int old = mCurrentSelectId;
-            findViewById(mCurrentSelectId).setSelected(false);
-            mCurrentSelectId = R.id.main_btn_fix_car;
-            View view = findViewById(mCurrentSelectId);
-            view.setSelected(true);
-            initFragmentWithId(old);
-
-            final FixCarFragment frag = (FixCarFragment) mFragmentsMap.get(mCurrentSelectId);
-            final String text = data.getStringExtra("text");
-            view.post(new Runnable() {
+            final String carName = data.getStringExtra("text");
+            final ProgressDialog dlg = ProgressDialog.show(this, getString(R.string.app_name), "正在签到，请稍候...", false, false);
+            Thread t = new Thread("SINGIN") {
                 @Override
                 public void run() {
                     double latitude, longitude;
-                    synchronized (MainActivity.this) {
-                        latitude = mLastLocation[0];
-                        longitude = mLastLocation[1];
+                    int result = -1;
+                    try {
+                        synchronized (MainActivity.this) {
+                            latitude = mLastLocation[0];
+                            longitude = mLastLocation[1];
+                        }
+                        long begin = System.currentTimeMillis();
+                        result = WebHelper.singin(carName, latitude, longitude);
+                        long time = System.currentTimeMillis() - begin;
+                        if (1000 - time > 0) {
+                            Thread.sleep(1000 - time);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                    frag.startSignin(text, latitude, longitude);
+                    dlg.dismiss();
+                    if (result == 0) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "签到成功", Toast.LENGTH_SHORT).show();
+                                onSingIn(carName);
+                            }
+                        });
+                    } else {
+                        Toast.makeText(MainActivity.this, "签到失败", Toast.LENGTH_SHORT).show();
+                    }
                 }
-            });
+            };
+            t.start();
         }
+    }
+
+    /**
+     * 表示签到成功
+     *
+     * @param carName
+     */
+    private void onSingIn(final String carName) {
+        new AlertDialog.Builder(this).setTitle(R.string.app_name).setItems(new CharSequence[]{"添加维修记录", "查看维修日志"}, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+
+                } else {
+                    Intent i = new Intent(MainActivity.this, ViewFixCarLogActivity.class);
+                    i.putExtra("carName", carName);
+                    startActivity(i);
+                }
+            }
+        }).show();
     }
 
     public void setLastLocation(double latitude, double longitude) {

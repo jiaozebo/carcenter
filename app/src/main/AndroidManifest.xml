@@ -233,6 +233,11 @@
             android:enabled="true"
             android:exported="false" >
         </service>
+
+        <activity
+            android:name=".activity.ViewFixCarLogActivity"
+            android:label="@string/title_activity_view_fix_car_log" >
+        </activity>
     </application>
 
 </manifest>

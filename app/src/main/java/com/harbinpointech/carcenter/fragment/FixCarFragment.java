@@ -101,7 +101,7 @@ public class FixCarFragment extends Fragment implements View.OnClickListener {
                 if (v.getId() == R.id.fix_car_fix) {
                     WebHelper.AddRepaireRecord();
                 } else if (v.getId() == R.id.fix_car_log) {
-                    WebHelper.mobileGetRepaireRecords2();
+//                    WebHelper.mobileGetRepaireRecords2();
                 }
                 try {
                     Thread.sleep(1000);
