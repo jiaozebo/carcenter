@@ -3,29 +3,47 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <include
+    <TextView
         android:id="@+id/vehicle_info_item_plugin_name"
-        layout="@android:layout/simple_list_item_1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"></include>
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:minHeight="40dp"
+        android:paddingLeft="10dp"
+        android:text="设备"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <include
+    <TextView
         android:id="@+id/vehicle_info_item_voltage_value"
-        layout="@android:layout/simple_list_item_1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"></include>
-    <include
-        android:id="@+id/vehicle_info_current_value"
-        layout="@android:layout/simple_list_item_1"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:minHeight="40dp"
+        android:paddingLeft="10dp"
+        android:text="电压值（V）"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/vehicle_info_item_current_value"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"></include>
-    <include
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:minHeight="40dp"
+        android:paddingLeft="10dp"
+        android:text="电流值（A）"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
         android:id="@+id/vehicle_info_item_state"
-        layout="@android:layout/simple_list_item_1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"></include>
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:minHeight="40dp"
+        android:paddingLeft="10dp"
+        android:text="状态"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 </LinearLayout>

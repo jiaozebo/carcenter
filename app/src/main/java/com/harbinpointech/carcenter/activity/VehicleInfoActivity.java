@@ -22,6 +22,7 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.util.AsyncTask;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -209,6 +210,7 @@ public class VehicleInfoActivity extends ActionBarActivity {
                 protected void onPostExecute(Integer result) {
                     super.onPostExecute(result);
                     if (getArguments().getInt(ARG_SECTION_NUMBER) == 0) {
+
                         List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
                             if (mContent != null) {
@@ -238,33 +240,41 @@ public class VehicleInfoActivity extends ActionBarActivity {
                         };
                         setListAdapter(adapter);
                     } else {
-                        List<Pair<String, String>> items = new ArrayList<Pair<String, String>>();
                         try {
-                            if (mContent != null) {
-                                mContent = mContent.getJSONObject("d");
-                                items.add(new Pair<String, String>("车辆型号：", mContent.getString("CarModel")));
-                                items.add(new Pair<String, String>("车牌号：", mContent.getString("CarName")));
-                                items.add(new Pair<String, String>("车辆管理员：", mContent.getString("Manager")));
-                                items.add(new Pair<String, String>("车管员电话：", mContent.getString("ManagerPhone")));
+                            JSONArray contents = mContent.getJSONArray("d");
+                            List<JSONObject> items = new ArrayList<JSONObject>();
+                            for (int i = 0; i < contents.length(); i++) {
+                                items.add(contents.getJSONObject(i));
                             }
+                            ArrayAdapter<JSONObject> adapter = new ArrayAdapter<JSONObject>(getActivity(), R.layout.vehicle_basic_info_item, items) {
+                                @Override
+                                public View getView(int position, View convertView, ViewGroup parent) {
+                                    if (convertView == null) {
+                                        convertView = getLayoutInflater(null).inflate(R.layout.vehicle_plugin_info_item, parent, false);
+                                    }
+                                    TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_plugin_name);
+                                    TextView tvVValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_voltage_value);
+                                    TextView tvCValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_current_value);
+                                    TextView state = (TextView) convertView.findViewById(R.id.vehicle_info_item_state);
+                                    JSONObject p = getItem(position);
+                                    try {
+                                        tvName.setText(p.getString("DeviceName"));
+                                        tvVValue.setText(p.getString("Voltage"));
+                                        tvCValue.setText(p.getString("Current"));
+                                        state.setText(p.getString("CurrentState"));
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                    return convertView;
+                                }
+                            };
+                            View header = getLayoutInflater(null).inflate(R.layout.vehicle_plugin_info_item, getListView(), false);
+                            getListView().addHeaderView(header);
+                            setListAdapter(adapter);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        ArrayAdapter<Pair<String, String>> adapter = new ArrayAdapter<Pair<String, String>>(getActivity(), R.layout.vehicle_basic_info_item, items) {
-                            @Override
-                            public View getView(int position, View convertView, ViewGroup parent) {
-                                if (convertView == null) {
-                                    convertView = getLayoutInflater(null).inflate(R.layout.vehicle_basic_info_item, parent, false);
-                                }
-                                TextView tvName = (TextView) convertView.findViewById(R.id.vehicle_info_item_name);
-                                TextView tvValue = (TextView) convertView.findViewById(R.id.vehicle_info_item_value);
-                                Pair<String, String> p = getItem(position);
-                                tvName.setText(p.first);
-                                tvValue.setText(p.second);
-                                return convertView;
-                            }
-                        };
-                        setListAdapter(adapter);
+
                     }
 
                 }

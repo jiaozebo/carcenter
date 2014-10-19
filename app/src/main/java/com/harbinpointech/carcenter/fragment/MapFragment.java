@@ -74,7 +74,7 @@ public class MapFragment extends SupportMapFragment {
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
-    private static final int MAXIMUM_POOL_SIZE = 128;
+    private static final int MAXIMUM_POOL_SIZE = 32;
     private static final int KEEP_ALIVE = 1;
 
     private static final ThreadFactory sThreadFactory = new ThreadFactory() {
@@ -92,7 +92,7 @@ public class MapFragment extends SupportMapFragment {
      * An {@link java.util.concurrent.Executor} that can be used to execute tasks in parallel.
      */
     public static final Executor THREAD_POOL_EXECUTOR
-            = new ThreadPoolExecutor(30, MAXIMUM_POOL_SIZE, 10,
+            = new ThreadPoolExecutor(10, MAXIMUM_POOL_SIZE, 30,
             TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory, new ThreadPoolExecutor.DiscardOldestPolicy());
 
     public MapFragment() {
@@ -218,7 +218,7 @@ public class MapFragment extends SupportMapFragment {
                                                             String name = mk.getExtraInfo().getString("CarName");
                                                             if (name.equals(carName)) {
                                                                 mk.setPosition(point);
-                                                                Log.w(TAG, "mov car :" + carName);
+//                                                                Log.w(TAG, "mov car :" + carName);
                                                                 found = true;
                                                                 break;
                                                             }
@@ -228,7 +228,7 @@ public class MapFragment extends SupportMapFragment {
                                                                 String name = txt.getExtraInfo().getString("CarName");
                                                                 if (name.equals(carName)) {
                                                                     txt.setPosition(point);
-                                                                    Log.w(TAG, "mov carTxt :" + carName);
+//                                                                    Log.w(TAG, "mov carTxt :" + carName);
                                                                     break;
                                                                 }
                                                             }
@@ -236,7 +236,7 @@ public class MapFragment extends SupportMapFragment {
                                                         }
 
 
-                                                        Log.w(TAG, "add car :" + carName);
+//                                                        Log.w(TAG, "add car :" + carName);
                                                         Bundle extrInfo = new Bundle();
                                                         extrInfo.putString("CarName", carName);
                                                         OverlayOptions option = new MarkerOptions()
@@ -271,7 +271,7 @@ public class MapFragment extends SupportMapFragment {
                     }
                     if (mQueryCarPosThread != null) {
                         try {
-                            Thread.sleep(10000);    // 10秒更新一次
+                            Thread.sleep(30000);    // 10秒更新一次
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

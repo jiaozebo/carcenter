@@ -99,7 +99,8 @@ public class WebHelper {
      */
     public static int getCarPluginInfos(JSONObject[] params, String carName) throws JSONException, IOException {
         params[0] = new JSONObject();
-        params[0].put("carName", new String(carName.getBytes(), "ISO8859-1"));
+        params[0].put("CarName", new String(carName.getBytes(), "ISO8859-1"));
+//        params[0].put("CarName", carName);
         int result = doPost(URL + "MobileGetCarDeviceInfo", params);
         if (result == 200) {
             return 0;
