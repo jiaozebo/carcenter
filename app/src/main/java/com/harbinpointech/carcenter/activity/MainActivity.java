@@ -78,6 +78,7 @@ public class MainActivity extends ActionBarActivity {
         setTitle("查看车辆");
 
         Intent i = new Intent(this, QueryInfosService.class);
+        i.putExtra(QueryInfosService.EXTRA_SESSION, WebHelper.getSession());
         startService(i);
 
 

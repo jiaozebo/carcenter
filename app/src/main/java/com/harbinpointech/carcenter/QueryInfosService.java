@@ -41,6 +41,8 @@ public class QueryInfosService extends Service {
     public static final String EXTRA_REQUEST_FRIEND_USER_ID = "EXTRA_REQUEST_FRIEND_USER";
     public static final String EXTRA_REQUEST_FRIEND_USER_NAME = "EXTRA_REQUEST_FRIEND_USER_NAME";
 
+
+    public static final String EXTRA_SESSION = "EXTRA_SESSION";
     private Thread mQueryThread;
 
     @Override
@@ -52,6 +54,8 @@ public class QueryInfosService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (mQueryThread == null) {
+            String session = intent.getStringExtra(EXTRA_SESSION);
+            WebHelper.setSession(session);
             mQueryThread = new Thread("QUERY_LOOPER") {
                 @Override
                 public void run() {
@@ -167,7 +171,7 @@ public class QueryInfosService extends Service {
             };
             mQueryThread.start();
         }
-        return START_STICKY;
+        return START_REDELIVER_INTENT;
     }
 
 

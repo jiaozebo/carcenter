@@ -397,4 +397,11 @@ public class WebHelper {
         }
     }
 
+    public static void setSession(String session) {
+        JSESSIONID = session;
+    }
+
+    public static String getSession() {
+        return JSESSIONID;
+    }
 }
