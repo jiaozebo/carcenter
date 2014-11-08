@@ -1,6 +1,8 @@
 package com.harbinpointech.carcenter.activity;
 
-import android.app.*;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -30,7 +32,6 @@ import com.harbinpointech.carcenter.data.Message;
 import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.BBSFragment;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
-import com.harbinpointech.carcenter.fragment.FixCarFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
 
 import org.json.JSONException;
@@ -159,6 +160,8 @@ public class MainActivity extends ActionBarActivity {
         if (id == R.id.action_settings) {
             startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTING);
             return true;
+        }else if (id == R.id.action_about){
+
         }
         return super.onOptionsItemSelected(item);
     }

@@ -66,5 +66,7 @@
     <string name="title_section3">Section 3</string>
     <string name="title_activity_scan">扫描车辆信息</string>
     <string name="title_activity_view_fix_car_log">维修记录</string>
+    <string name="title_activity_questions">常见问题</string>
+    <string name="title_activity_advise">AdviseActivity</string>
 
 </resources>

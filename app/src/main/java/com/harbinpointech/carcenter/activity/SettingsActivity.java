@@ -1,9 +1,11 @@
 package com.harbinpointech.carcenter.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
+import com.harbinpointech.carcenter.QuestionsActivity;
 import com.harbinpointech.carcenter.R;
 
 /**
@@ -68,6 +70,24 @@ public class SettingsActivity extends PreferenceActivity {
                 return true;
             }
         });
+
+        Preference questions = findPreference("key_questions");
+        questions.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                startActivity(new Intent(SettingsActivity.this, QuestionsActivity.class));
+                return true;
+            }
+        });
+
+        Preference advise = findPreference("key_advise");
+        advise.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                startActivity(new Intent(SettingsActivity.this, QuestionsActivity.class));
+                return true;
+            }
+        });
     }
 
     /**
@@ -81,9 +101,9 @@ public class SettingsActivity extends PreferenceActivity {
             Boolean enable = (Boolean) value;
             if ("notifications_new_message".equals(key)) {
 //                chatOptions.setNotificationEnable(enable);
-            }else if ("notifications_new_message_vibrate".equals(key)){
+            } else if ("notifications_new_message_vibrate".equals(key)) {
 //                chatOptions.setNoticedByVibrate(enable);
-            }else if ("notifications_new_message_sound".equals(key)){
+            } else if ("notifications_new_message_sound".equals(key)) {
 //                chatOptions.setNoticeBySound(enable);
             }
             return true;

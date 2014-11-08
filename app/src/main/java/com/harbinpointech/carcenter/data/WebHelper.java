@@ -397,6 +397,18 @@ public class WebHelper {
         }
     }
 
+    public static int addFanKui(String advise) throws IOException, JSONException {
+        JSONObject[] content = new JSONObject[1];
+        content[0] = new JSONObject();
+        content[0].put("FanKui", new String(advise.getBytes(), "ISO8859-1"));
+        int result = doPost(URL + "AddFanKui", content);
+        if (result == 200) {
+            return 0;
+        } else {
+            return result;
+        }
+    }
+
     public static void setSession(String session) {
         JSESSIONID = session;
     }
@@ -404,4 +416,6 @@ public class WebHelper {
     public static String getSession() {
         return JSESSIONID;
     }
+
+
 }

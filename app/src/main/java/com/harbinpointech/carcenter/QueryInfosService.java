@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.MainActivity;
@@ -40,6 +42,15 @@ public class QueryInfosService extends Service {
     public static final String EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED = "EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED";
     public static final String EXTRA_REQUEST_FRIEND_USER_ID = "EXTRA_REQUEST_FRIEND_USER";
     public static final String EXTRA_REQUEST_FRIEND_USER_NAME = "EXTRA_REQUEST_FRIEND_USER_NAME";
+
+
+    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
+    public static final String ACTION_CHECK_UPDATE = "com.harbinpointech.carcenter.ACTION_CHECK_UPDATE";
+    public static final String ACTION_START_DOWNLOAD = "com.harbinpointech.carcenter.ACTION_START_DOWNLOAD";
+    private static final String ACTION_CANCEL_NOTIFY = "com.harbinpointech.carcenter.ACTION_CANCEL_NOTIFY";
+    public static final String EXTRA_NEWEST_VERSION = "com.harbinpointech.carcenter.extra.NEWEST_VERSION";
+    public static final String EXTRA_DOWNLOAD_URL = "com.harbinpointech.carcenter.extra.DOWNLOAD_URL";
+    public static final String EXTRA_UPDATE_LOG = "com.harbinpointech.carcenter.extra.UPDATE_LOG";
 
 
     public static final String EXTRA_SESSION = "EXTRA_SESSION";
@@ -127,6 +138,12 @@ public class QueryInfosService extends Service {
                                                     .setContentIntent(pi);
                                             nm.notify(0, builder.build());
                                         }
+                                    } else if (content.indexOf(Message.MSG_SERVER_PUSH_VERSION) == 0) {   // 服务器推送新版本通知
+
+                                    } else if (content.indexOf(Message.MSG_SERVER_PUSH_ERROR) == 0) {   // 服务器推送鼓掌
+
+                                    } else if (content.indexOf(Message.MSG_SERVER_PUSH_TASK) == 0) {   // 服务器推送任务
+
                                     }
                                 }
                                 int size = CarSQLiteOpenHelper.insert(Message.TABLE, array);
@@ -134,22 +151,27 @@ public class QueryInfosService extends Service {
                                     Intent i = new Intent(ACTION_NOTIFICATIONS_RECEIVED);
                                     i.putExtra(EXTRA_CHAT_ARRAY, array.toString());
                                     boolean bResult = LocalBroadcastManager.getInstance(QueryInfosService.this).sendBroadcast(i);
-                                    if (!bResult) {
+                                    boolean notify = PreferenceManager.getDefaultSharedPreferences(QueryInfosService.this).getBoolean("notifications_new_message", true);
+                                    if (!bResult && notify) {
+                                        boolean sound = PreferenceManager.getDefaultSharedPreferences(QueryInfosService.this).getBoolean("notifications_new_message_sound", true);
+                                        boolean vibrate = PreferenceManager.getDefaultSharedPreferences(QueryInfosService.this).getBoolean("notifications_new_message_vibrate", false);
                                         JSONObject msg = (JSONObject) array.get(0);
                                         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                                         Intent activityIntent = new Intent(QueryInfosService.this, ChatActivity.class);
 
                                         activityIntent.putExtra(ChatActivity.SENDER_ID, msg.getString(Message.SENDER));
                                         activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 
+                                        int defaults = 0;
+                                        if (sound) defaults |= NotificationCompat.DEFAULT_SOUND;
+                                        if (vibrate) defaults |= NotificationCompat.DEFAULT_VIBRATE;
                                         PendingIntent pi = PendingIntent.getActivity(QueryInfosService.this, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
                                         NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
                                                 .setSmallIcon(R.drawable.icon_account)
                                                 .setContentTitle(getString(R.string.app_name))
                                                 .setContentText("接收到了新消息")
-                                                .setSound(alarmSound)
+                                                .setDefaults(defaults)
                                                 .setAutoCancel(true)
                                                 .setContentIntent(pi);
                                         nm.notify(0, builder.build());
@@ -174,6 +196,59 @@ public class QueryInfosService extends Service {
         return START_REDELIVER_INTENT;
     }
 
+
+    private static final int NOTIFY_ID = 0x1306;
+
+
+    /**
+     * 创建并发动一个通知，提示用户有版本可升级。
+     *
+     * @param c
+     * @param newestVer
+     * @param requestVer
+     * @param log
+     * @param downloadUrl
+     */
+    public static void helpNotify(Context c, String newestVer, String requestVer, String log, String downloadUrl) {
+        Intent intent;// notification...
+        NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        intent = new Intent(c, DownloadService.class);
+
+        intent.putExtra(DownloadService.EXTRA_NOTIFY_ID, NOTIFY_ID);
+        intent.putExtra(DownloadService.EXTRA_DOWNLOAD_URL, downloadUrl);
+        intent.putExtra(DownloadService.EXTRA_NEWEST_VERSION, newestVer);
+        intent.setAction(DownloadService.ACTION_START_DOWNLOAD);
+        intent.putExtra(EXTRA_NEWEST_VERSION, newestVer);
+        intent.putExtra(EXTRA_DOWNLOAD_URL, downloadUrl);
+
+
+        PendingIntent download_action = PendingIntent.getService(c, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .addAction(R.drawable.ic_stat_accept, "下载并更新", download_action)
+                .setContentTitle(c.getString(R.string.app_name))
+                .setContentText(String.format("检测到新版本:%s", newestVer))
+                .setSound(alarmSound)
+                .setAutoCancel(false)
+                .setContentIntent(download_action);
+        String[] logs = log.split("\n");
+        NotificationCompat.InboxStyle inboxStyle =
+                new NotificationCompat.InboxStyle();
+        inboxStyle.setBigContentTitle(String.format("检测到新版本:%s", newestVer));
+        boolean hasLine = false;
+        for (int i = 0; i < logs.length; i++) {
+            if (TextUtils.isEmpty(logs[i])) {
+                continue;
+            }
+            hasLine = true;
+            inboxStyle.addLine(logs[i]);
+        }
+        if (hasLine) {
+            builder.setStyle(inboxStyle);
+        }
+        nm.notify(NOTIFY_ID, builder.build());
+    }
 
     @Override
     public void onDestroy() {

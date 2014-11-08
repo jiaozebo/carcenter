@@ -9,7 +9,6 @@ import android.provider.BaseColumns;
 public class Message implements BaseColumns {
 
 
-
     //    public static final String MSG_ADD_FRIEND = "[][][][]";
     /**
      * 表示请求加某人为好友
@@ -23,17 +22,21 @@ public class Message implements BaseColumns {
      * 表示拒绝某人的好友请求
      */
     public static final String MSG_ADD_FRIEND_REJECT = "MSG_ADD_FRIEND_REJECT";
-    
+
     /**
      * 表示收到了服务器推送的车辆故障信息
      */
     public static final String MSG_SERVER_PUSH_ERROR = "MSG_SERVER_PUSH_ERROR";
 
-	/**
+    /**
      * 表示收到了服务器推送的任务信息
-     * 
      */
     public static final String MSG_SERVER_PUSH_TASK = "MSG_SERVER_PUSH_TASK";
+
+    /**
+     * 表示收到了新版本的推送信息
+     */
+    public static final String MSG_SERVER_PUSH_VERSION = "MSG_SERVER_PUSH_VERSION";
 
     /*
 
