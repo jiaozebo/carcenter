@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
+import com.harbinpointech.carcenter.AdviseActivity;
 import com.harbinpointech.carcenter.QuestionsActivity;
 import com.harbinpointech.carcenter.R;
 
@@ -84,7 +85,7 @@ public class SettingsActivity extends PreferenceActivity {
         advise.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                startActivity(new Intent(SettingsActivity.this, QuestionsActivity.class));
+                startActivity(new Intent(SettingsActivity.this, AdviseActivity.class));
                 return true;
             }
         });

@@ -54,6 +54,12 @@ public class QueryInfosService extends Service {
 
 
     public static final String EXTRA_SESSION = "EXTRA_SESSION";
+    /**
+     * 表示服务器下发任务
+     */
+    public static final String EXTRA_SERVER_PUSH_TASK = "EXTRA_SERVER_PUSH_TASK";
+    public static final String EXTRA_SERVER_PUSH_ERROR = "EXTRA_SERVER_PUSH_ERROR";
+    public static final String EXTRA_SERVER_PUSH_VERSION = "EXTRA_SERVER_PUSH_VERSION";
     private Thread mQueryThread;
 
     @Override
@@ -93,7 +99,7 @@ public class QueryInfosService extends Service {
                                             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                                             Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
-
+                                            activityIntent.putExtra(MainActivity.EXTRA_ACTION_FLAG, QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID);
                                             activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID, user);
                                             activityIntent.putExtra(EXTRA_REQUEST_FRIEND_ANSWERED_USER_NAME, name);
                                             activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, Message.MSG_ADD_FRIEND_ACCEPT.equals(content));
@@ -123,6 +129,7 @@ public class QueryInfosService extends Service {
                                             Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                                             Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
 
+                                            activityIntent.putExtra(MainActivity.EXTRA_ACTION_FLAG, QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID);
                                             activityIntent.putExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID, user);
                                             activityIntent.putExtra(EXTRA_REQUEST_FRIEND_USER_NAME, name);
                                             activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -139,11 +146,37 @@ public class QueryInfosService extends Service {
                                             nm.notify(0, builder.build());
                                         }
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_VERSION) == 0) {   // 服务器推送新版本通知
-
+                                        array.put(i,null);
+                                        String versionInfo = content.substring(Message.MSG_SERVER_PUSH_VERSION.length());
+                                        versionInfo = versionInfo.trim();
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_ERROR) == 0) {   // 服务器推送鼓掌
-
+                                        array.put(i,null);
+                                        String errorInfo = content.substring(Message.MSG_SERVER_PUSH_ERROR.length());
+                                        errorInfo = errorInfo.trim();
+                                        // TODO ... nty error
+//                                        EXTRA_SERVER_PUSH_ERROR
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_TASK) == 0) {   // 服务器推送任务
+                                        array.put(i, null);
+                                        String task = content.substring(Message.MSG_SERVER_PUSH_TASK.length());
+                                        task = task.trim();
 
+                                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                                        Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
+
+                                        activityIntent.putExtra(MainActivity.EXTRA_ACTION_FLAG, EXTRA_SERVER_PUSH_TASK);
+                                        activityIntent.putExtra(EXTRA_SERVER_PUSH_TASK, task);
+                                        activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                                        PendingIntent pi = PendingIntent.getActivity(QueryInfosService.this, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
+                                                .setSmallIcon(R.drawable.abc_ic_go)
+                                                .setContentTitle(getString(R.string.app_name))
+                                                .setContentText("服务器下发通知")
+                                                .setSound(alarmSound)
+                                                .setAutoCancel(true)
+                                                .setContentIntent(pi);
+                                        nm.notify(0, builder.build());
                                     }
                                 }
                                 int size = CarSQLiteOpenHelper.insert(Message.TABLE, array);

@@ -43,6 +43,10 @@ public class MainActivity extends ActionBarActivity {
 
     public static final int REQUEST_SETTING = 1000;
     public static final int RESULT_QUIT = 1000;
+    /**
+     * 额外的启动参数。比如从通知栏启动时，会传进来。
+     */
+    public static final String EXTRA_ACTION_FLAG = "extra_action_flag";
     private int mCurrentSelectId;
     private NewMessageBroadcastReceiver mMsgReceiver;
     private HashMap<Integer, Fragment> mFragmentsMap = new HashMap<Integer, Fragment>();
@@ -85,15 +89,24 @@ public class MainActivity extends ActionBarActivity {
 
         fixUnread();
 
-        String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID);
-        if (!TextUtils.isEmpty(user)) {
-            boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
+        String extraAction = intent.getStringExtra(EXTRA_ACTION_FLAG);
+        if (!TextUtils.isEmpty(extraAction)) {
+            if (extraAction.equals(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID) || extraAction.equals(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID)) {
+                String user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID);
+                if (!TextUtils.isEmpty(user)) {
+                    boolean accepted = intent.getBooleanExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_ACCEPTED, false);
 //            new AlertDialog.Builder(this).setTitle(getString(R.string.app_name)).setMessage(String.format("%s %s了您的请求", user, accepted ? "接受" : "拒绝")).show();
-        } else {
-            user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID);
-            String name = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_NAME);
-            if (!TextUtils.isEmpty(user))
-                answerAddRequest(this, user, name);
+                } else {
+                    user = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID);
+                    String name = intent.getStringExtra(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_NAME);
+                    if (!TextUtils.isEmpty(user))
+                        answerAddRequest(this, user, name);
+                }
+            } else if (extraAction.equals(QueryInfosService.EXTRA_SERVER_PUSH_TASK)) {
+                // 表示服务器下发任务
+                String task = intent.getStringExtra(QueryInfosService.EXTRA_SERVER_PUSH_TASK);
+                new AlertDialog.Builder(this).setMessage(task).setTitle("服务器下发通知").setPositiveButton("确定", null).show();
+            }else if (extraAction.equals(QueryInfosService.EXTRA_))
         }
     }
 
@@ -160,7 +173,7 @@ public class MainActivity extends ActionBarActivity {
         if (id == R.id.action_settings) {
             startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTING);
             return true;
-        }else if (id == R.id.action_about){
+        } else if (id == R.id.action_about) {
 
         }
         return super.onOptionsItemSelected(item);
