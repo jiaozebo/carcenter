@@ -38,6 +38,24 @@ public class Message implements BaseColumns {
      */
     public static final String MSG_SERVER_PUSH_VERSION = "MSG_SERVER_PUSH_VERSION";
 
+    public static final String JSON = "{\n" +
+            "    \"__type\": \"ServiceMessage:#WcfService.Entity\",\n" +
+            "    \"Message1\": \"MSG_SERVER_PUSH_VERSION {\n" +
+            "    \\\"version\\\": \\\"2.0\\\",\n" +
+            "    \\\"log\\\":\\\"修改了界面\\\",\n" +
+            "    \\\"download_url\\\": \\\"http: //www.xxxxxx.apk\\\"\n" +
+            "}\",\n" +
+            "    \"SendID\": \"1\",\n" +
+            "    \"MessageGroupID\": null,\n" +
+            "    \"ReceiveID\": \"75\",\n" +
+            "    \"MessageGroup\": null,\n" +
+            "    \"MessageCount\": null,\n" +
+            "    \"IsGroupMessage\": \"N\",\n" +
+            "    \"SendTime\": \"2014/10/5 23:43:56\",\n" +
+            "    \"ID\": \"109\",\n" +
+            "    \"ReceiveTime\": null\n" +
+            "}";
+
     /*
 
 

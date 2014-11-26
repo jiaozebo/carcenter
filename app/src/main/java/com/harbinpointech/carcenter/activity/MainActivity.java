@@ -106,7 +106,7 @@ public class MainActivity extends ActionBarActivity {
                 // 表示服务器下发任务
                 String task = intent.getStringExtra(QueryInfosService.EXTRA_SERVER_PUSH_TASK);
                 new AlertDialog.Builder(this).setMessage(task).setTitle("服务器下发通知").setPositiveButton("确定", null).show();
-            }else if (extraAction.equals(QueryInfosService.EXTRA_))
+            }
         }
     }
 

@@ -21,13 +21,6 @@ import android.widget.Toast;
 public class DownloadService extends IntentService {
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    public static final String ACTION_START_DOWNLOAD = "com.harbinpointech.carcenter.action.FOO";
-    private static final String ACTION_BAZ = "com.harbinpointech.carcenter.action.BAZ";
-
-    // TODO: Rename parameters
-    public static final String EXTRA_NOTIFY_ID = "com.harbinpointech.carcenter.extra.notify_id";
-    public static final String EXTRA_DOWNLOAD_URL = "com.harbinpointech.carcenter.extra.PARAM1";
-    public static final String EXTRA_NEWEST_VERSION = "com.harbinpointech.carcenter.extra.PARAM2";
 
     /**
      * Starts this service to perform action Foo with the given parameters. If
@@ -36,27 +29,12 @@ public class DownloadService extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionFoo(Context context, int notifyId, String param1, String param2) {
+    public static void startDownload(Context context, int notifyId, String url, String version) {
         Intent intent = new Intent(context, DownloadService.class);
-        intent.setAction(ACTION_START_DOWNLOAD);
-        intent.putExtra(EXTRA_NOTIFY_ID, notifyId);
-        intent.putExtra(EXTRA_DOWNLOAD_URL, param1);
-        intent.putExtra(EXTRA_NEWEST_VERSION, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, DownloadService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_DOWNLOAD_URL, param1);
-        intent.putExtra(EXTRA_NEWEST_VERSION, param2);
+        intent.setAction(QueryInfosService.ACTION_START_DOWNLOAD);
+        intent.putExtra(QueryInfosService.EXTRA_NOTIFY_ID, notifyId);
+        intent.putExtra(QueryInfosService.EXTRA_DOWNLOAD_URL, url);
+        intent.putExtra(QueryInfosService.EXTRA_NEWEST_VERSION, version);
         context.startService(intent);
     }
 
@@ -68,10 +46,10 @@ public class DownloadService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_START_DOWNLOAD.equals(action)) {
-                final int notify_id = intent.getIntExtra(EXTRA_NOTIFY_ID, 0);
-                String url = intent.getStringExtra(EXTRA_DOWNLOAD_URL);
-                String lastVersion = intent.getStringExtra(EXTRA_NEWEST_VERSION);
+            if (QueryInfosService.ACTION_START_DOWNLOAD.equals(action)) {
+                final int notify_id = intent.getIntExtra(QueryInfosService.EXTRA_NOTIFY_ID, 0);
+                String url = intent.getStringExtra(QueryInfosService.EXTRA_DOWNLOAD_URL);
+                String lastVersion = intent.getStringExtra(QueryInfosService.EXTRA_NEWEST_VERSION);
                 handleActionDownload(notify_id, url, lastVersion);
             }
         }

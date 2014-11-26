@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.harbinpointech.carcenter.activity.ChatActivity;
 import com.harbinpointech.carcenter.activity.MainActivity;
@@ -60,6 +61,8 @@ public class QueryInfosService extends Service {
     public static final String EXTRA_SERVER_PUSH_TASK = "EXTRA_SERVER_PUSH_TASK";
     public static final String EXTRA_SERVER_PUSH_ERROR = "EXTRA_SERVER_PUSH_ERROR";
     public static final String EXTRA_SERVER_PUSH_VERSION = "EXTRA_SERVER_PUSH_VERSION";
+    private static final String TAG = "IM";
+    public static final String EXTRA_NOTIFY_ID = "EXTRA_NOTIFY_ID";
     private Thread mQueryThread;
 
     @Override
@@ -77,11 +80,33 @@ public class QueryInfosService extends Service {
                 @Override
                 public void run() {
                     JSONObject[] params = new JSONObject[1];
+                    boolean test = true;
                     while (mQueryThread != null) {
                         try {
                             int result = WebHelper.recvMessage(params);
                             if (result == 0) {
                                 JSONArray array = params[0].getJSONArray("d");
+                                if (test) {
+                                    test = false;
+                                    String JSON = "{\n" +
+                                            "    \"__type\": \"ServiceMessage:#WcfService.Entity\",\n" +
+                                            "    \"Message1\": \"MSG_SERVER_PUSH_VERSION {\n" +
+                                            "    \\\"version\\\": \\\"2.0\\\",\n" +
+                                            "    \\\"log\\\":\\\"修改了界面\\\",\n" +
+                                            "    \\\"download_url\\\": \\\"http: //www.xxxxxx.apk\\\"\n" +
+                                            "}\",\n" +
+                                            "    \"SendID\": \"1\",\n" +
+                                            "    \"MessageGroupID\": null,\n" +
+                                            "    \"ReceiveID\": \"75\",\n" +
+                                            "    \"MessageGroup\": null,\n" +
+                                            "    \"MessageCount\": null,\n" +
+                                            "    \"IsGroupMessage\": \"N\",\n" +
+                                            "    \"SendTime\": \"2014/10/5 23:43:56\",\n" +
+                                            "    \"ID\": \"109\",\n" +
+                                            "    \"ReceiveTime\": null\n" +
+                                            "}";
+                                    array = new JSONArray(String.format("[%s]", JSON));
+                                }
                                 for (int i = 0; i < array.length(); i++) {
                                     JSONObject message = array.getJSONObject(i);
                                     String content = message.getString(Message.CONTENT);
@@ -146,11 +171,20 @@ public class QueryInfosService extends Service {
                                             nm.notify(0, builder.build());
                                         }
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_VERSION) == 0) {   // 服务器推送新版本通知
-                                        array.put(i,null);
+                                        array.put(i, null);
                                         String versionInfo = content.substring(Message.MSG_SERVER_PUSH_VERSION.length());
                                         versionInfo = versionInfo.trim();
+//                                        {“version”:”2.0”,”log”:”修改了界面”,”download_url”:”http://www.xxxxxx.apk”}
+                                        JSONObject updateJson = null;
+                                        try {
+                                            updateJson = new JSONObject(versionInfo);
+                                            helpNotify(QueryInfosService.this, updateJson.getString("version"), updateJson.getString("log"), updateJson.getString("download_url"));
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, String.format("received invalid updateinfo:%s", versionInfo));
+                                            e.printStackTrace();
+                                        }
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_ERROR) == 0) {   // 服务器推送鼓掌
-                                        array.put(i,null);
+                                        array.put(i, null);
                                         String errorInfo = content.substring(Message.MSG_SERVER_PUSH_ERROR.length());
                                         errorInfo = errorInfo.trim();
                                         // TODO ... nty error
@@ -238,20 +272,19 @@ public class QueryInfosService extends Service {
      *
      * @param c
      * @param newestVer
-     * @param requestVer
      * @param log
      * @param downloadUrl
      */
-    public static void helpNotify(Context c, String newestVer, String requestVer, String log, String downloadUrl) {
+    public static void helpNotify(Context c, String newestVer, String log, String downloadUrl) {
         Intent intent;// notification...
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         intent = new Intent(c, DownloadService.class);
 
-        intent.putExtra(DownloadService.EXTRA_NOTIFY_ID, NOTIFY_ID);
-        intent.putExtra(DownloadService.EXTRA_DOWNLOAD_URL, downloadUrl);
-        intent.putExtra(DownloadService.EXTRA_NEWEST_VERSION, newestVer);
-        intent.setAction(DownloadService.ACTION_START_DOWNLOAD);
+        intent.putExtra(EXTRA_NOTIFY_ID, NOTIFY_ID);
+        intent.putExtra(EXTRA_DOWNLOAD_URL, downloadUrl);
+        intent.putExtra(EXTRA_NEWEST_VERSION, newestVer);
+        intent.setAction(ACTION_START_DOWNLOAD);
         intent.putExtra(EXTRA_NEWEST_VERSION, newestVer);
         intent.putExtra(EXTRA_DOWNLOAD_URL, downloadUrl);
 

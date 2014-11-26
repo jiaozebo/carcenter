@@ -37,6 +37,7 @@ import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.activity.VehicleInfoActivity;
 import com.harbinpointech.carcenter.data.WebHelper;
+import com.harbinpointech.carcenter.util.GPSConvertor;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -194,69 +195,62 @@ public class MapFragment extends SupportMapFragment {
 
                                 for (int i = 0; mQueryCarPosThread != null && i < js.length(); i++) {
                                     final JSONObject item = js.getJSONObject(i);
-                                    THREAD_POOL_EXECUTOR.execute(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            try {
-                                                //定义Maker坐标点
-                                                double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
-                                                WebHelper.gps2lnglat(data);
+                                    try {
+                                        //定义Maker坐标点
+                                        double[] data = new double[]{item.getDouble("Lattitude"), item.getDouble("Longtitude")};//*///
+                                        WebHelper.gps2lnglat(data);
 //                            Object []objData = new Object[]{data[0],data[1]};
 
-                                                int result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
-                                                if (result == 0 && mQueryCarPosThread != null && isResumed()) {
-                                                    LatLng point = new LatLng(data[0], data[1]);
+                                        GPSConvertor.gps2bd(data);
+//                                                int result = WebHelper.fixPoint("http://api.map.baidu.com/ag/coord/convert", data);
+                                        if (mQueryCarPosThread != null && isResumed()) {
+                                            LatLng point = new LatLng(data[0], data[1]);
 //构建Marker图标
-                                                    BitmapDescriptor bitmap = BitmapDescriptorFactory
-                                                            .fromResource(R.drawable.icon_marka);
+                                            BitmapDescriptor bitmap = BitmapDescriptorFactory
+                                                    .fromResource(R.drawable.icon_marka);
 //构建MarkerOption，用于在地图上添加Marker
 
-                                                    boolean found = false;
-                                                    String carName = item.getString("CarName");
-                                                    synchronized (mCars) {
-                                                        for (Marker mk : mCars) {
-                                                            String name = mk.getExtraInfo().getString("CarName");
-                                                            if (name.equals(carName)) {
-                                                                mk.setPosition(point);
+                                            boolean found = false;
+                                            String carName = item.getString("CarName");
+                                            synchronized (mCars) {
+                                                for (Marker mk : mCars) {
+                                                    String name = mk.getExtraInfo().getString("CarName");
+                                                    if (name.equals(carName)) {
+                                                        mk.setPosition(point);
 //                                                                Log.w(TAG, "mov car :" + carName);
-                                                                found = true;
-                                                                break;
-                                                            }
-                                                        }
-                                                        if (found) {
-                                                            for (Text txt : mCarNames) {
-                                                                String name = txt.getExtraInfo().getString("CarName");
-                                                                if (name.equals(carName)) {
-                                                                    txt.setPosition(point);
+                                                        found = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (found) {
+                                                    for (Text txt : mCarNames) {
+                                                        String name = txt.getExtraInfo().getString("CarName");
+                                                        if (name.equals(carName)) {
+                                                            txt.setPosition(point);
 //                                                                    Log.w(TAG, "mov carTxt :" + carName);
-                                                                    break;
-                                                                }
-                                                            }
-                                                            return;
+                                                            break;
                                                         }
+                                                    }
+                                                    return;
+                                                }
 
 
 //                                                        Log.w(TAG, "add car :" + carName);
-                                                        Bundle extrInfo = new Bundle();
-                                                        extrInfo.putString("CarName", carName);
-                                                        OverlayOptions option = new MarkerOptions()
-                                                                .position(point)
-                                                                .icon(bitmap).title(carName).extraInfo(extrInfo);
-                                                        Marker m = (Marker) getBaiduMap().addOverlay(option);
-                                                        mCars.add(m);
-                                                        option = new TextOptions().position(point).text(carName).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
-                                                        Text name = (Text) getBaiduMap().addOverlay(option);
-                                                        mCarNames.add(name);
-                                                    }
-                                                }
-                                            } catch (JSONException ex) {
-                                                ex.printStackTrace();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
+                                                Bundle extrInfo = new Bundle();
+                                                extrInfo.putString("CarName", carName);
+                                                OverlayOptions option = new MarkerOptions()
+                                                        .position(point)
+                                                        .icon(bitmap).title(carName).extraInfo(extrInfo);
+                                                Marker m = (Marker) getBaiduMap().addOverlay(option);
+                                                mCars.add(m);
+                                                option = new TextOptions().position(point).text(carName).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+                                                Text name = (Text) getBaiduMap().addOverlay(option);
+                                                mCarNames.add(name);
                                             }
                                         }
-                                    });
-//                                    mFixPositionThreads.add(t);
+                                    } catch (JSONException ex) {
+                                        ex.printStackTrace();
+                                    }
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
