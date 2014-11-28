@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -20,6 +21,7 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
@@ -33,6 +35,7 @@ import com.baidu.mapapi.map.SupportMapFragment;
 import com.baidu.mapapi.map.Text;
 import com.baidu.mapapi.map.TextOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.harbinpointech.carcenter.QueryInfosService;
 import com.harbinpointech.carcenter.R;
 import com.harbinpointech.carcenter.activity.MainActivity;
 import com.harbinpointech.carcenter.activity.VehicleInfoActivity;
@@ -85,6 +88,10 @@ public class MapFragment extends SupportMapFragment {
             return new Thread(r, "THREAD_POOL_EXECUTOR #" + mCount.getAndIncrement());
         }
     };
+
+    public void setLastLocation(BDLocation location) {
+        mLastLocation = location;
+    }
 
     private static final BlockingQueue<Runnable> sPoolWorkQueue =
             new LinkedBlockingQueue<Runnable>(MAXIMUM_POOL_SIZE);
@@ -293,6 +300,38 @@ public class MapFragment extends SupportMapFragment {
                                                }
 
         );
+
+        Bundle args = getArguments();
+        if (args != null) {
+            String vehicle = args.getString(QueryInfosService.EXTRA_VEHICLE_ID);
+            int statue = args.getInt(QueryInfosService.EXTRA_VEHICLE_STATUS);
+            double lat = args.getDouble(QueryInfosService.EXTRA_LAT);
+            double lng = args.getDouble(QueryInfosService.EXTRA_LNG);
+            if (lat == 0d || lng == 0d) {
+                Toast.makeText(getActivity(), "未获取到车辆位置", Toast.LENGTH_SHORT).show();
+            } else {
+                BDLocation location = new BDLocation();
+                location.setLatitude(lat);
+                location.setLongitude(lng);
+                setLastLocation(location);
+                addVehicle(vehicle, lat, lng, statue);
+            }
+        }
+        if (mLastLocation != null) {
+            LatLng ll = new LatLng(mLastLocation.getLatitude(),
+                    mLastLocation.getLongitude());
+            //定义地图状态
+            MapStatus mMapStatus = new MapStatus.Builder()
+                    .target(ll)
+                    .zoom(18)
+                    .build();
+            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+
+
+            MapStatusUpdate state = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+            //改变地图状态
+            getBaiduMap().animateMapStatus(state);
+        }
     }
 
     @Override
@@ -389,5 +428,20 @@ public class MapFragment extends SupportMapFragment {
         };
         mLocationClient.registerLocationListener(mListener);
         mLocationClient.start();
+    }
+
+    public void addVehicle(String vehicle, double lat, double lng, int statue) {
+        Bundle extrInfo = new Bundle();
+        extrInfo.putString("CarName", vehicle);
+        LatLng point = new LatLng(lat, lng);
+        BitmapDescriptor bitmap = BitmapDescriptorFactory
+                .fromResource(R.drawable.icon_marka);
+        OverlayOptions option = new MarkerOptions()
+                .position(point)
+                .icon(bitmap).title(vehicle).extraInfo(extrInfo);
+        Marker m = (Marker) getBaiduMap().addOverlay(option);
+
+        option = new TextOptions().position(point).text(vehicle).extraInfo(extrInfo).align(TextOptions.ALIGN_CENTER_HORIZONTAL, TextOptions.ALIGN_TOP).fontSize(getResources().getDimensionPixelSize(R.dimen.abc_action_bar_title_text_size));
+        Text name = (Text) getBaiduMap().addOverlay(option);
     }
 }

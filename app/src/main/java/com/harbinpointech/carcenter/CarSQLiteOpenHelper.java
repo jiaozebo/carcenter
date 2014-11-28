@@ -62,7 +62,12 @@ public class CarSQLiteOpenHelper extends SQLiteOpenHelper {
             int count = 0;
             A:
             for (int i = 0; i < array.length(); i++) {
-                JSONObject chat = array.getJSONObject(i);
+                JSONObject chat = null;
+                try {
+                    chat = array.getJSONObject(i);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 if (chat == null) {
                     continue;
                 }

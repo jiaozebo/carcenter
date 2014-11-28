@@ -24,6 +24,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
 import com.baidu.mapapi.SDKInitializer;
 import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.QueryInfosService;
@@ -64,6 +65,9 @@ public class MainActivity extends ActionBarActivity {
         mCurrentSelectId = R.id.main_btn_view_cars;
 
         FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
+
+
+
         Fragment map = new MapFragment();
 
         Bundle args = new Bundle();
@@ -78,17 +82,7 @@ public class MainActivity extends ActionBarActivity {
 //        mFragmentsMap.put(R.id.main_btn_fix_car, fixCar);
         mFragmentsMap.put(R.id.main_btn_chat, chatList);
         mFragmentsMap.put(R.id.main_btn_bbs, bbs);
-        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, chatList).add(R.id.fragment_container, bbs).hide(chatList).hide(bbs).commit();
-
-        setTitle("查看车辆");
-
-        Intent i = new Intent(this, QueryInfosService.class);
-        i.putExtra(QueryInfosService.EXTRA_SESSION, WebHelper.getSession());
-        startService(i);
-
-
-        fixUnread();
-
+        trx.add(R.id.fragment_container, map).add(R.id.fragment_container, chatList).add(R.id.fragment_container, bbs).hide(chatList).hide(bbs);
         String extraAction = intent.getStringExtra(EXTRA_ACTION_FLAG);
         if (!TextUtils.isEmpty(extraAction)) {
             if (extraAction.equals(QueryInfosService.EXTRA_REQUEST_FRIEND_ANSWERED_USER_ID) || extraAction.equals(QueryInfosService.EXTRA_REQUEST_FRIEND_USER_ID)) {
@@ -106,8 +100,28 @@ public class MainActivity extends ActionBarActivity {
                 // 表示服务器下发任务
                 String task = intent.getStringExtra(QueryInfosService.EXTRA_SERVER_PUSH_TASK);
                 new AlertDialog.Builder(this).setMessage(task).setTitle("服务器下发通知").setPositiveButton("确定", null).show();
+            } else if (extraAction.equals(QueryInfosService.EXTRA_SERVER_PUSH_ERROR)) {
+                String vehicle = intent.getStringExtra(QueryInfosService.EXTRA_VEHICLE_ID);
+                int statue = intent.getIntExtra(QueryInfosService.EXTRA_VEHICLE_STATUS, 0);
+                double lat = intent.getDoubleExtra(QueryInfosService.EXTRA_LAT, 0d);
+                double lng = intent.getDoubleExtra(QueryInfosService.EXTRA_LNG, 0d);
+                MapFragment mf = (MapFragment) map;
+                args = new Bundle();
+                args.putAll(intent.getExtras());
+                mf.setArguments(args);
             }
         }
+        setTitle("查看车辆");
+
+        Intent i = new Intent(this, QueryInfosService.class);
+        i.putExtra(QueryInfosService.EXTRA_SESSION, WebHelper.getSession());
+        startService(i);
+
+
+        fixUnread();
+
+
+        trx.commit();
     }
 
     @Override

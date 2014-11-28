@@ -81,16 +81,22 @@ public class DownloadService extends IntentService {
         request.setTitle(getResources().getString(R.string.app_name));
         // sdcard的目录下的download文件夹
         String name = String.format("%s_%s.apk", getString(R.string.app_name), lastVersion);
-        request.setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_DOWNLOADS, name);
-        DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        try {
+            request.setDestinationInExternalPublicDir(
+                    Environment.DIRECTORY_DOWNLOADS, name);
+            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 
-        long id = dm.enqueue(request);
-        if (id == -1) {
+            long id = dm.enqueue(request);
+            if (id == -1) {
+                Toast.makeText(this, "下载失败", Toast.LENGTH_SHORT).show();
+            } else {
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             Toast.makeText(this, "下载失败", Toast.LENGTH_SHORT).show();
-        } else {
-
         }
+
     }
 
     /**

@@ -63,6 +63,10 @@ public class QueryInfosService extends Service {
     public static final String EXTRA_SERVER_PUSH_VERSION = "EXTRA_SERVER_PUSH_VERSION";
     private static final String TAG = "IM";
     public static final String EXTRA_NOTIFY_ID = "EXTRA_NOTIFY_ID";
+    public static final String EXTRA_VEHICLE_ID = "extra_vehicle";
+    public static final String EXTRA_VEHICLE_STATUS = "extra_vehicle_status";
+    public static final String EXTRA_LNG = "extra_lng";
+    public static final String EXTRA_LAT = "extra_lat";
     private Thread mQueryThread;
 
     @Override
@@ -89,22 +93,18 @@ public class QueryInfosService extends Service {
                                 if (test) {
                                     test = false;
                                     String JSON = "{\n" +
-                                            "    \"__type\": \"ServiceMessage:#WcfService.Entity\",\n" +
-                                            "    \"Message1\": \"MSG_SERVER_PUSH_VERSION {\n" +
-                                            "    \\\"version\\\": \\\"2.0\\\",\n" +
-                                            "    \\\"log\\\":\\\"修改了界面\\\",\n" +
-                                            "    \\\"download_url\\\": \\\"http: //www.xxxxxx.apk\\\"\n" +
-                                            "}\",\n" +
-                                            "    \"SendID\": \"1\",\n" +
-                                            "    \"MessageGroupID\": null,\n" +
-                                            "    \"ReceiveID\": \"75\",\n" +
-                                            "    \"MessageGroup\": null,\n" +
-                                            "    \"MessageCount\": null,\n" +
-                                            "    \"IsGroupMessage\": \"N\",\n" +
-                                            "    \"SendTime\": \"2014/10/5 23:43:56\",\n" +
-                                            "    \"ID\": \"109\",\n" +
-                                            "    \"ReceiveTime\": null\n" +
-                                            "}";
+                                            "            \"__type\": \"ServiceMessage:#WcfService.Entity\",\n" +
+                                            "            \"Message1\": \"MSG_SERVER_PUSH_TASK {\\\"task\\\":\\\"这是一个任务\\\"}\",\n" +
+                                            "            \"SendID\": \"1\",\n" +
+                                            "            \"MessageGroupID\": null,\n" +
+                                            "            \"ReceiveID\": \"1\",\n" +
+                                            "            \"MessageGroup\": null,\n" +
+                                            "            \"MessageCount\": null,\n" +
+                                            "            \"IsGroupMessage\": \"N\",\n" +
+                                            "            \"SendTime\": \"2014/11/27 23:55:15\",\n" +
+                                            "            \"ID\": \"219\",\n" +
+                                            "            \"ReceiveTime\": null\n" +
+                                            "        }";
                                     array = new JSONArray(String.format("[%s]", JSON));
                                 }
                                 for (int i = 0; i < array.length(); i++) {
@@ -187,30 +187,28 @@ public class QueryInfosService extends Service {
                                         array.put(i, null);
                                         String errorInfo = content.substring(Message.MSG_SERVER_PUSH_ERROR.length());
                                         errorInfo = errorInfo.trim();
-                                        // TODO ... nty error
-//                                        EXTRA_SERVER_PUSH_ERROR
+
+                                        try {
+//                                            \"vehicle\":\"黑A12345\"，\"status\":\"2\"}
+                                            JSONObject errorJson = new JSONObject(errorInfo);
+                                            helpNotifyError(QueryInfosService.this, errorJson.getString("vehicle"), errorJson.getInt("status"), 45.757732, 126.608274);
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, String.format("received invalid updateinfo:%s", errorInfo));
+                                            e.printStackTrace();
+                                        }
                                     } else if (content.indexOf(Message.MSG_SERVER_PUSH_TASK) == 0) {   // 服务器推送任务
                                         array.put(i, null);
                                         String task = content.substring(Message.MSG_SERVER_PUSH_TASK.length());
                                         task = task.trim();
+                                        try {
+//                                            \"vehicle\":\"黑A12345\"，\"status\":\"2\"}
+                                            JSONObject taskJson = new JSONObject(task);
+                                            helpNotifyTask(QueryInfosService.this, taskJson.getString("task"));
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, String.format("received invalid updateinfo:%s", task));
+                                            e.printStackTrace();
+                                        }
 
-                                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                                        Intent activityIntent = new Intent(QueryInfosService.this, MainActivity.class);
-
-                                        activityIntent.putExtra(MainActivity.EXTRA_ACTION_FLAG, EXTRA_SERVER_PUSH_TASK);
-                                        activityIntent.putExtra(EXTRA_SERVER_PUSH_TASK, task);
-                                        activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-                                        PendingIntent pi = PendingIntent.getActivity(QueryInfosService.this, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
-                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(QueryInfosService.this)
-                                                .setSmallIcon(R.drawable.abc_ic_go)
-                                                .setContentTitle(getString(R.string.app_name))
-                                                .setContentText("服务器下发通知")
-                                                .setSound(alarmSound)
-                                                .setAutoCancel(true)
-                                                .setContentIntent(pi);
-                                        nm.notify(0, builder.build());
                                     }
                                 }
                                 int size = CarSQLiteOpenHelper.insert(Message.TABLE, array);
@@ -261,6 +259,50 @@ public class QueryInfosService extends Service {
             mQueryThread.start();
         }
         return START_REDELIVER_INTENT;
+    }
+
+    private static void helpNotifyTask(Context c, String task) {
+
+        NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Intent activityIntent = new Intent(c, MainActivity.class);
+
+        activityIntent.putExtra(MainActivity.EXTRA_ACTION_FLAG, EXTRA_SERVER_PUSH_TASK);
+        activityIntent.putExtra(EXTRA_SERVER_PUSH_TASK, task);
+        activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent pi = PendingIntent.getActivity(c, 0, activityIntent, PendingIntent.FLAG_ONE_SHOT);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                .setSmallIcon(R.drawable.abc_ic_go)
+                .setContentTitle(c.getString(R.string.app_name))
+                .setContentText("服务器下发任务")
+                .setSound(alarmSound)
+                .setAutoCancel(true)
+                .setContentIntent(pi);
+        nm.notify(0, builder.build());
+    }
+
+    private static void helpNotifyError(Context c, String vehicle, int status, double lat, double lng) {
+        Intent intent;// notification...
+        NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        intent = new Intent(c, MainActivity.class);
+        intent.putExtra(MainActivity.EXTRA_ACTION_FLAG, EXTRA_SERVER_PUSH_ERROR);
+
+        intent.putExtra(EXTRA_VEHICLE_ID, vehicle);
+        intent.putExtra(EXTRA_VEHICLE_STATUS, status);
+        intent.putExtra(EXTRA_LAT, lat);
+        intent.putExtra(EXTRA_LNG, lng);
+
+        PendingIntent pi = PendingIntent.getActivity(c, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(c)
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle(c.getString(R.string.app_name))
+                .setContentText(String.format("车辆故障:%s", vehicle))
+                .setSound(alarmSound)
+                .setAutoCancel(false)
+                .setContentIntent(pi);
+        nm.notify(NOTIFY_ID, builder.build());
     }
 
 
