@@ -191,7 +191,9 @@ public class QueryInfosService extends Service {
                                         try {
 //                                            \"vehicle\":\"黑A12345\"，\"status\":\"2\"}
                                             JSONObject errorJson = new JSONObject(errorInfo);
-                                            helpNotifyError(QueryInfosService.this, errorJson.getString("vehicle"), errorJson.getInt("status"), 45.757732, 126.608274);
+                                            double[] ll = new double[]{errorJson.getDouble("Lat"), errorJson.getDouble("Lng")};
+                                            WebHelper.gps2lnglat(ll);
+                                            helpNotifyError(QueryInfosService.this, errorJson.getString("vehicle"), errorJson.getInt("status"), ll[0], ll[1]);
                                         } catch (JSONException e) {
                                             Log.e(TAG, String.format("received invalid updateinfo:%s", errorInfo));
                                             e.printStackTrace();

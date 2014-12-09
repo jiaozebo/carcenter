@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-     <color name="common_top_bar_blue">#4ebcd3</color>
-      <color name="btn_login_normal">#007086</color>
+
+    <color name="common_top_bar_blue">#4ebcd3</color>
+    <color name="btn_login_normal">#007086</color>
     <color name="btn_login_pressed">#303744</color>
     <color name="btn_logout_normal">#d33f3f</color>
     <color name="btn_logout_pressed">#DA5A4D</color>
@@ -17,21 +18,20 @@
     <color name="error_item_color">#F6EBE6</color>
     <color name="bottom_bar_normal_bg">#2D2F31</color>
     <color name="bottom_text_color_normal">#ffffff</color>
-     <color name="btn_white_normal">#f7f8f8</color>
+    <color name="btn_white_normal">#f7f8f8</color>
     <color name="btn_white_pressed">#b5b5b6</color>
     <color name="btn_green_noraml">#68C270</color>
     <color name="btn_green_pressed">#6FCD78</color>
     <color name="btn_gray_normal">#c0c0c0</color>
-     <color name="btn_gray_pressed_status">#b5b5b6</color>
+    <color name="btn_gray_pressed_status">#b5b5b6</color>
     <color name="btn_gray_pressed">#666667</color>
     <color name="btn_blue_normal">#1e90ff</color>
     <color name="btn_blue_pressed">#0066FF</color>
-     <color name="orange">#FFA500</color>
-     <color name="gray_pressed">#b5b5b6</color>
-     <color name="gray_normal">#666667</color>
-     <color name="grid_state_pressed">#1Affffff</color>
+    <color name="orange">#FFA500</color>
+    <color name="gray_pressed">#b5b5b6</color>
+    <color name="gray_normal">#666667</color>
+    <color name="grid_state_pressed">#1Affffff</color>
     <color name="grid_state_focused">#80000000</color>
-
     <color name="black_overlay">#66000000</color>
     <color name="holo_red_dark">#ffcc0000</color>
     <color name="holo_red_light">#ffFF4444</color>
@@ -68,4 +68,19 @@
     <color name="my_drawer_list_item_select">#dfe3ea</color>
     <color name="half_transparent_blue">#662da5da</color>
     <color name="main_tablet_land_action_bar_bg">#33000000</color>
+    <color name="background_gradient_start">#000000</color>
+    <color name="background_gradient_end">#DDDDDD</color>
+    <color name="fastlane_background">#0096a6</color>
+    <color name="search_opaque">#ffaa3f</color>
+    <color name="detail_background">#0096a6</color>
+    <color name="soft_opaque">#30000000</color>
+    <color name="img_soft_opaque">#30FF0000</color>
+    <color name="img_full_opaque">#00000000</color>
+    <color name="black_opaque">#AA000000</color>
+    <color name="black">#59000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="orange_transparent">#AAFADCA7</color>
+    <color name="yellow">#EEFF41</color>
+    <color name="default_background">#3d3d3d</color>
+
 </resources>

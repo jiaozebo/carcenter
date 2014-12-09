@@ -3,6 +3,8 @@ package com.harbinpointech.carcenter.data;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.LogPrinter;
+import android.util.Printer;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -18,9 +20,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,6 +35,9 @@ public class WebHelper {
 
     public static final String URL = "http://182.254.136.208:81/WCF/Service.svc/";
 //    public static final String URL = "http://192.168.1.101:81/service.svc/";
+
+
+    private static final Printer P = new LogPrinter(Log.INFO, "web_helper");
 
     public static boolean hasLogined() {
         return !TextUtils.isEmpty(JSESSIONID);
@@ -239,6 +247,47 @@ public class WebHelper {
         }
     }
 
+    /**
+     * 进行日志的写入，通过获取当前时间，把内容和时间传给服务器。
+     * bool AddRepaireRecord1(string CarName, string Repairemployee, string Faultreason, string Method, string Remark, string Time, string Summary);
+     * <p/>
+     * 参数
+     * CarName车牌号
+     * Repairemployee维修工程师
+     * Faultreason故障原因
+     * Method维?修方法
+     * Remark备注
+     * Time时间
+     * Summary摘要
+     */
+    public static int addFixLog(String carName, String repairemployee, String Faultreason, String Method, String Remark, String Summary) throws JSONException, IOException {
+        JSONObject param = new JSONObject();
+        param.put("CarName", utf8ToISO8859(carName));
+        param.put("Repairemployee", utf8ToISO8859(repairemployee));
+        param.put("Faultreason", utf8ToISO8859(Faultreason));
+        param.put("Method", utf8ToISO8859(Method));
+        param.put("Remark", utf8ToISO8859(Remark));
+        param.put("Time", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        param.put("Summary", utf8ToISO8859(Summary));
+
+        JSONObject[] params = new JSONObject[]{param};
+        int result = doPost(URL + "AddRepaireRecord1", params);
+        if (result == 200) {
+            return params[0].getBoolean("d") ? 0 : 1;
+        } else {
+            return result;
+        }
+    }
+
+    public static String utf8ToISO8859(String value) {
+        try {
+            return new String(value.getBytes(), "ISO8859-1");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static byte[] MD5(byte[] input) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         md.update(input);
@@ -272,6 +321,7 @@ public class WebHelper {
         } else {
         }
         Log.w("WEB_HELPER_request", url + ", " + json[0]);
+        P.println(String.format("POST REQUEST   URL:%s, PARAM:%s", url, json[0]));
 //        ps.println("REQUEST:    *******");
 //        ps.println(url);
 //        ps.println(json[0]);
@@ -316,7 +366,8 @@ public class WebHelper {
 //            ps.println(jsonStr);
 //            ps.close();
             json[0] = new JSONObject(jsonStr);
-            Log.w("WEB_HELPER_response", url + ", " + json[0].toString());
+//            Log.w("WEB_HELPER_response", url + ", " + json[0].toString());
+            P.println(String.format("POST RESPONSE   URL:%s, CONTENT:%s", url, json[0]));
         }
         return sl.getStatusCode();
     }

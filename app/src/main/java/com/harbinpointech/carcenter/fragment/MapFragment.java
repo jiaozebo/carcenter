@@ -435,7 +435,7 @@ public class MapFragment extends SupportMapFragment {
         extrInfo.putString("CarName", vehicle);
         LatLng point = new LatLng(lat, lng);
         BitmapDescriptor bitmap = BitmapDescriptorFactory
-                .fromResource(R.drawable.icon_marka);
+                .fromResource(statue == 2 ? R.drawable.ic_marker_error : R.drawable.ic_marker);
         OverlayOptions option = new MarkerOptions()
                 .position(point)
                 .icon(bitmap).title(vehicle).extraInfo(extrInfo);

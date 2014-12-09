@@ -67,7 +67,6 @@ public class MainActivity extends ActionBarActivity {
         FragmentTransaction trx = getSupportFragmentManager().beginTransaction();
 
 
-
         Fragment map = new MapFragment();
 
         Bundle args = new Bundle();
@@ -142,6 +141,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private static final int REQUEST_SCAN_VEHICLE = 0x1000;
+    private static final int REQUEST_ADD_FIXED_LOG = 0x1100;
 
     private void initFragmentWithId(int oldId) {
         Fragment frag = null;
@@ -242,6 +242,12 @@ public class MainActivity extends ActionBarActivity {
                 }
             };
             t.start();
+        } else if (requestCode == REQUEST_ADD_FIXED_LOG) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "添加维修日志成功", Toast.LENGTH_SHORT).show();
+            } else if (resultCode != RESULT_CANCELED) {
+                Toast.makeText(this, "添加维修日志未成功", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -255,7 +261,7 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which == 0) {
-
+                    onAddFixLog(carName);
                 } else {
                     Intent i = new Intent(MainActivity.this, ViewFixCarLogActivity.class);
                     i.putExtra("carName", carName);
@@ -263,6 +269,12 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         }).show();
+    }
+
+    private void onAddFixLog(String carName) {
+        Intent i = new Intent(this, AddFixLogActivity.class);
+        i.putExtra(AddFixLogActivity.KEY_CAR_NAME, carName);
+        startActivityForResult(i, REQUEST_ADD_FIXED_LOG);
     }
 
     public void setLastLocation(double latitude, double longitude) {

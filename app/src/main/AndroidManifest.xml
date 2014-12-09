@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.harbinpointech.carcenter"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0">
 
     <uses-sdk
         android:minSdkVersion="11"
@@ -28,16 +28,8 @@
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <permission android:name="android.permission.BAIDU_LOCATION_SERVICE" />
 
@@ -62,22 +54,16 @@
     <uses-permission android:name="android.permission.READ_LOGS" />
 
     <application
-        android:name="com.harbinpointech.carcenter.CarApp"
+        android:name=".CarApp"
         android:allowBackup="true"
         android:icon="@drawable/logo_uidemo"
         android:label="@string/app_name"
-        android:theme="@style/horizontal_slide" >
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.MainChatActivity"
-            android:launchMode="singleTask"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
+        android:theme="@style/horizontal_slide">
         <!-- 登陆 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.LoginActivity"
+            android:name=".activity.LoginActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide" >
+            android:theme="@style/horizontal_slide">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -85,117 +71,30 @@
             </intent-filter>
         </activity>
 
-        <!-- 注册 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.RegisterActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
         <!-- 聊天页面 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.ChatActivity"
+            android:name=".activity.ChatActivity"
             android:launchMode="singleTop"
             android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustResize" >
-        </activity>
+            android:windowSoftInputMode="adjustResize"></activity>
         <!-- 添加好友 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.AddContactActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-        <!-- 群组详情 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.GroupDetailsActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-        <!-- 群组列表 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.GroupsActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
+            android:name=".activity.AddContactActivity"
+            android:theme="@style/horizontal_slide"></activity>
         <!-- 新建群组 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.NewGroupActivity"
+            android:name=".activity.NewGroupActivity"
             android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
+            android:windowSoftInputMode="adjustPan"></activity>
         <!-- 退出群组提示框 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.ExitGroupDialog"
-            android:theme="@style/MyDialogStyleBottom" >
-        </activity>
-        <!-- 群组选人 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.GroupPickContactsActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
+            android:name=".activity.ExitGroupDialog"
+            android:theme="@style/MyDialogStyleBottom"></activity>
 
-        <!-- 新的朋友邀请消息页面 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.NewFriendsMsgActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-        <!-- 转发消息用户列表页面 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.ForwardMessageActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
-        <!-- 自定义的contextmenu -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.ContextMenu"
-            android:theme="@style/MyDialogStyle" >
-        </activity>
-        <!-- 自定义的alertdialog -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.AlertDialog"
-            android:theme="@style/MyDialogStyle" >
-        </activity>
-        <!-- 显示下载大图页面 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.ShowBigImage"
-            android:theme="@style/horizontal_slide" >
-        </activity>
         <!-- 下载文件 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.ShowNormalFileActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-        <!-- 黑名单 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.BlacklistActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-
-        <!-- 公开的群聊列表 -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.PublicGroupsActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="adjustPan" >
-        </activity>
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.GroupSimpleDetailActivity"
-            android:theme="@style/horizontal_slide" >
-        </activity>
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.ShowVideoActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden" >
-        </activity>
-        <!-- choose video -->
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.ImageGridActivity"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden" >
-        </activity>
-        <activity
-            android:name="com.harbinpointech.carcenter.activity.RecorderVideoActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden" />
-
+            android:name=".activity.ShowNormalFileActivity"
+            android:theme="@style/horizontal_slide"></activity>
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
@@ -203,54 +102,52 @@
         <!-- ChatDemoUI  使用友盟统计来收集crash report。这个不是环信sdk 的一部分 -->
         <meta-data
             android:name="UMENG_APPKEY"
-            android:value="53912a3156240b01a7075ed1" >
-        </meta-data>
+            android:value="53912a3156240b01a7075ed1"></meta-data>
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="0Aya15PDQZWEbkhl6XeOAI7K" />
         <!-- end of 友盟声明 -->
         <activity
-            android:name="com.harbinpointech.carcenter.activity.MainActivity"
+            android:name=".activity.MainActivity"
             android:label="@string/title_activity_main"
-            android:screenOrientation="portrait" >
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
-            android:name="com.harbinpointech.carcenter.activity.SettingsActivity"
-            android:label="@string/title_activity_settings" >
-        </activity>
+            android:name=".activity.SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
         <activity
-            android:name="com.harbinpointech.carcenter.activity.VehicleInfoActivity"
-            android:label="@string/title_activity_vehicle_info" >
-        </activity>
+            android:name=".activity.VehicleInfoActivity"
+            android:label="@string/title_activity_vehicle_info"></activity>
         <activity
-            android:name="com.harbinpointech.carcenter.activity.ScanActivity"
+            android:name=".activity.ScanActivity"
             android:label="扫描二维码"
-            android:theme="@style/FloatActionBar" >
-        </activity>
+            android:theme="@style/FloatActionBar"></activity>
 
         <service
-            android:name="com.harbinpointech.carcenter.QueryInfosService"
+            android:name=".QueryInfosService"
             android:enabled="true"
-            android:exported="false" >
-        </service>
+            android:exported="false"></service>
 
         <activity
-            android:name="com.harbinpointech.carcenter.activity.ViewFixCarLogActivity"
-            android:label="@string/title_activity_view_fix_car_log" >
-        </activity>
+            android:name=".activity.ViewFixCarLogActivity"
+            android:label="@string/title_activity_view_fix_car_log"></activity>
         <activity
-            android:name="com.harbinpointech.carcenter.QuestionsActivity"
-            android:label="@string/title_activity_questions" >
-        </activity>
+            android:name=".QuestionsActivity"
+            android:label="@string/title_activity_questions"></activity>
         <activity
-            android:name="com.harbinpointech.carcenter.AdviseActivity"
-            android:label="@string/title_activity_advise" >
-        </activity>
+            android:name=".AdviseActivity"
+            android:label="@string/title_activity_advise"></activity>
 
         <service
-            android:name="com.harbinpointech.carcenter.DownloadService"
-            android:exported="false" >
-        </service>
+            android:name=".DownloadService"
+            android:exported="false"></service>
+
+        <activity
+            android:name=".activity.AddFixLogActivity"
+            android:label="@string/title_activity_add_fix_log"></activity>
     </application>
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
 
 </manifest>
