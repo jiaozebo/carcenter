@@ -1,6 +1,7 @@
 package com.harbinpointech.carcenter.activity;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -89,6 +90,13 @@ public class SettingsActivity extends PreferenceActivity {
                 return true;
             }
         });
+
+        Preference version = findPreference("key_version");
+        try {
+            version.setSummary(getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

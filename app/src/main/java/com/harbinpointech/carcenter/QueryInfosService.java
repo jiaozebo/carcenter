@@ -84,7 +84,7 @@ public class QueryInfosService extends Service {
                 @Override
                 public void run() {
                     JSONObject[] params = new JSONObject[1];
-                    boolean test = true;
+                    boolean test = false;
                     while (mQueryThread != null) {
                         try {
                             int result = WebHelper.recvMessage(params);
