@@ -251,7 +251,7 @@ public class QueryInfosService extends Service {
                             e.printStackTrace();
                         }
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(3000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -264,7 +264,6 @@ public class QueryInfosService extends Service {
     }
 
     private static void helpNotifyTask(Context c, String task) {
-
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Intent activityIntent = new Intent(c, MainActivity.class);

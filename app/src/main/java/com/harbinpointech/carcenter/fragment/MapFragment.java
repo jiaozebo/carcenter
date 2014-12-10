@@ -161,7 +161,6 @@ public class MapFragment extends SupportMapFragment {
                         result = WebHelper.getCars(cars);
                         if (result == 0) {
                             mCarPos = cars[0];
-
                             try {
                                 JSONArray js = mCarPos.getJSONArray("d");
                                 Log.w(TAG, "queryed cars num:" + js.length());
@@ -169,11 +168,11 @@ public class MapFragment extends SupportMapFragment {
                                 // 先删除先前有，这次没查到了的
                                 synchronized (mCars) {
                                     Iterator<Marker> it = mCars.iterator();
-                                    while (it.hasNext()) {
+                                    while (mQueryCarPosThread != null && it.hasNext()) {
                                         Marker mk = it.next();
                                         String name = mk.getExtraInfo().getString("CarName");
                                         boolean found = false;
-                                        for (int i = 0; i < js.length(); i++) {
+                                        for (int i = 0; mQueryCarPosThread != null && i < js.length(); i++) {
                                             final JSONObject item = js.getJSONObject(i);
                                             String carName = item.getString("CarName");
                                             if (name.equals(carName)) {
@@ -186,7 +185,7 @@ public class MapFragment extends SupportMapFragment {
                                             it.remove();
                                             Log.w(TAG, "remove carTxt :" + name);
                                             Iterator<Text> t = mCarNames.iterator();
-                                            while (t.hasNext()) {
+                                            while (mQueryCarPosThread != null && t.hasNext()) {
                                                 Text txt = t.next();
                                                 String name2 = txt.getExtraInfo().getString("CarName");
                                                 if (name2.equals(name)) {
@@ -213,10 +212,9 @@ public class MapFragment extends SupportMapFragment {
                                         if (mQueryCarPosThread != null && isResumed()) {
                                             LatLng point = new LatLng(data[0], data[1]);
 //构建Marker图标
+                                            int statue = item.getInt("STATEID");
                                             BitmapDescriptor bitmap = BitmapDescriptorFactory
-                                                    .fromResource(R.drawable.icon_marka);
-//构建MarkerOption，用于在地图上添加Marker
-
+                                                    .fromResource(statue == 2 ? R.drawable.ic_marker_error : R.drawable.ic_marker);
                                             boolean found = false;
                                             String carName = item.getString("CarName");
                                             synchronized (mCars) {
@@ -240,9 +238,6 @@ public class MapFragment extends SupportMapFragment {
                                                     }
                                                     return;
                                                 }
-
-
-//                                                        Log.w(TAG, "add car :" + carName);
                                                 Bundle extrInfo = new Bundle();
                                                 extrInfo.putString("CarName", carName);
                                                 OverlayOptions option = new MarkerOptions()
@@ -272,7 +267,7 @@ public class MapFragment extends SupportMapFragment {
                     }
                     if (mQueryCarPosThread != null) {
                         try {
-                            Thread.sleep(30000);    // 10秒更新一次
+                            Thread.sleep(10000);    // 10秒更新一次
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

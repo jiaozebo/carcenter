@@ -24,7 +24,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.baidu.location.BDLocation;
 import com.baidu.mapapi.SDKInitializer;
 import com.harbinpointech.carcenter.CarApp;
 import com.harbinpointech.carcenter.QueryInfosService;
@@ -187,8 +186,6 @@ public class MainActivity extends ActionBarActivity {
         if (id == R.id.action_settings) {
             startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTING);
             return true;
-        } else if (id == R.id.action_about) {
-
         }
         return super.onOptionsItemSelected(item);
     }
