@@ -33,6 +33,7 @@ import com.harbinpointech.carcenter.data.WebHelper;
 import com.harbinpointech.carcenter.fragment.BBSFragment;
 import com.harbinpointech.carcenter.fragment.ContactlistFragment;
 import com.harbinpointech.carcenter.fragment.MapFragment;
+import com.umeng.analytics.MobclickAgent;
 
 import org.json.JSONException;
 
@@ -130,12 +131,14 @@ public class MainActivity extends ActionBarActivity {
         inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND_ANSWERED);
         inf.addAction(QueryInfosService.ACTION_REQUEST_FRIEND);
         LocalBroadcastManager.getInstance(this).registerReceiver(mMsgReceiver, inf);
+        MobclickAgent.onResume(this);
     }
 
     @Override
     protected void onPause() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMsgReceiver);
         mMsgReceiver = null;
+        MobclickAgent.onPause(this);
         super.onPause();
     }
 

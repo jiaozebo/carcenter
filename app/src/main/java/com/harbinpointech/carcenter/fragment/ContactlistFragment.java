@@ -102,7 +102,11 @@ public class ContactlistFragment extends ListFragment {
             public View newView(Context context, Cursor cursor, ViewGroup parent) {
                 View convertView = getLayoutInflater(null).inflate(R.layout.contact_list_item, parent, false);
                 TextView text = (TextView) convertView.findViewById(android.R.id.text1);
-                text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
+                if (cursor.getInt(cursor.getColumnIndex(Group.ID)) != 0) {
+                    text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.group_icon, 0, 0, 0);
+                } else {
+                    text.setCompoundDrawablesWithIntrinsicBounds(R.drawable.default_avatar, 0, 0, 0);
+                }
                 return convertView;
             }
 
@@ -136,6 +140,9 @@ public class ContactlistFragment extends ListFragment {
     }
 
     private void queryAndDisplay() {
+        final String sql = String.format("select * from (select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s) ORDER BY %s DESC", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
+                , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE, Group.ID);
+        Log.i("SQL", sql);
         new Thread("QUERY_CONTACTS") {
             JSONArray mUserSets
                     ,
@@ -159,9 +166,6 @@ public class ContactlistFragment extends ListFragment {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND,
-                                    BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
-                            Log.i("SQL", sql);
                             mCursor = CarApp.lockDataBase().rawQuery(sql, null);
                             CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
                             cursorAdapter.changeCursor(mCursor);
@@ -175,9 +179,6 @@ public class ContactlistFragment extends ListFragment {
                 }
             }
         }.start();
-        String sql = String.format("select  %s, %s, %s, 0 as %s from %s where %s == 1 union select  %s,%s as %s, %s as %s, %s from %s", BaseColumns._ID, Contacts.ID, Contacts.NAME, Group.ID, Contacts.TABLE, Contacts.FRIEND
-                , BaseColumns._ID, Group.ID, Contacts.ID, Group.NAME, Contacts.NAME, Group.ID, Group.TABLE);
-        Log.i("SQL", sql);
         mCursor = CarApp.lockDataBase().rawQuery(sql, null);
         CursorAdapter cursorAdapter = (CursorAdapter) getListAdapter();
         cursorAdapter.changeCursor(mCursor);
